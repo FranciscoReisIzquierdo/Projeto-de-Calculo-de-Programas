@@ -1,0 +1,2739 @@
+\documentclass[a4paper]{article}
+\usepackage[a4paper,left=3cm,right=2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{palatino}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue]{hyperref}
+\usepackage{graphicx}
+\usepackage{cp2021t}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{color}
+\definecolor{red}{RGB}{255,  0,  0}
+\definecolor{blue}{RGB}{0,0,255}
+\def\red{\color{red}}
+\def\blue{\color{blue}}
+%================= local x=====================================================%
+\def\getGif#1{\includegraphics[width=0.3\textwidth]{cp2021t_media/#1.png}}
+\let\uk=\emph
+\def\aspas#1{``#1"}
+%================= lhs2tex=====================================================%
+%% ODER: format ==         = "\mathrel{==}"
+%% ODER: format /=         = "\neq "
+%
+%
+\makeatletter
+\@ifundefined{lhs2tex.lhs2tex.sty.read}%
+  {\@namedef{lhs2tex.lhs2tex.sty.read}{}%
+   \newcommand\SkipToFmtEnd{}%
+   \newcommand\EndFmtInput{}%
+   \long\def\SkipToFmtEnd#1\EndFmtInput{}%
+  }\SkipToFmtEnd
+
+\newcommand\ReadOnlyOnce[1]{\@ifundefined{#1}{\@namedef{#1}{}}\SkipToFmtEnd}
+\usepackage{amstext}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\DeclareFontFamily{OT1}{cmtex}{}
+\DeclareFontShape{OT1}{cmtex}{m}{n}
+  {<5><6><7><8>cmtex8
+   <9>cmtex9
+   <10><10.95><12><14.4><17.28><20.74><24.88>cmtex10}{}
+\DeclareFontShape{OT1}{cmtex}{m}{it}
+  {<-> ssub * cmtt/m/it}{}
+\newcommand{\texfamily}{\fontfamily{cmtex}\selectfont}
+\DeclareFontShape{OT1}{cmtt}{bx}{n}
+  {<5><6><7><8>cmtt8
+   <9>cmbtt9
+   <10><10.95><12><14.4><17.28><20.74><24.88>cmbtt10}{}
+\DeclareFontShape{OT1}{cmtex}{bx}{n}
+  {<-> ssub * cmtt/bx/n}{}
+\newcommand{\tex}[1]{\text{\texfamily#1}}	% NEU
+
+\newcommand{\Sp}{\hskip.33334em\relax}
+
+
+\newcommand{\Conid}[1]{\mathit{#1}}
+\newcommand{\Varid}[1]{\mathit{#1}}
+\newcommand{\anonymous}{\kern0.06em \vbox{\hrule\@width.5em}}
+\newcommand{\plus}{\mathbin{+\!\!\!+}}
+\newcommand{\bind}{\mathbin{>\!\!\!>\mkern-6.7mu=}}
+\newcommand{\rbind}{\mathbin{=\mkern-6.7mu<\!\!\!<}}% suggested by Neil Mitchell
+\newcommand{\sequ}{\mathbin{>\!\!\!>}}
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+\usepackage{polytable}
+
+%mathindent has to be defined
+\@ifundefined{mathindent}%
+  {\newdimen\mathindent\mathindent\leftmargini}%
+  {}%
+
+\def\resethooks{%
+  \global\let\SaveRestoreHook\empty
+  \global\let\ColumnHook\empty}
+\newcommand*{\savecolumns}[1][default]%
+  {\g@addto@macro\SaveRestoreHook{\savecolumns[#1]}}
+\newcommand*{\restorecolumns}[1][default]%
+  {\g@addto@macro\SaveRestoreHook{\restorecolumns[#1]}}
+\newcommand*{\aligncolumn}[2]%
+  {\g@addto@macro\ColumnHook{\column{#1}{#2}}}
+
+\resethooks
+
+\newcommand{\onelinecommentchars}{\quad-{}- }
+\newcommand{\commentbeginchars}{\enskip\{-}
+\newcommand{\commentendchars}{-\}\enskip}
+
+\newcommand{\visiblecomments}{%
+  \let\onelinecomment=\onelinecommentchars
+  \let\commentbegin=\commentbeginchars
+  \let\commentend=\commentendchars}
+
+\newcommand{\invisiblecomments}{%
+  \let\onelinecomment=\empty
+  \let\commentbegin=\empty
+  \let\commentend=\empty}
+
+\visiblecomments
+
+\newlength{\blanklineskip}
+\setlength{\blanklineskip}{0.66084ex}
+
+\newcommand{\hsindent}[1]{\quad}% default is fixed indentation
+\let\hspre\empty
+\let\hspost\empty
+\newcommand{\NB}{\textbf{NB}}
+\newcommand{\Todo}[1]{$\langle$\textbf{To do:}~#1$\rangle$}
+
+\EndFmtInput
+\makeatother
+%
+%
+%
+%
+%
+%
+% This package provides two environments suitable to take the place
+% of hscode, called "plainhscode" and "arrayhscode". 
+%
+% The plain environment surrounds each code block by vertical space,
+% and it uses \abovedisplayskip and \belowdisplayskip to get spacing
+% similar to formulas. Note that if these dimensions are changed,
+% the spacing around displayed math formulas changes as well.
+% All code is indented using \leftskip.
+%
+% Changed 19.08.2004 to reflect changes in colorcode. Should work with
+% CodeGroup.sty.
+%
+\ReadOnlyOnce{polycode.fmt}%
+\makeatletter
+
+\newcommand{\hsnewpar}[1]%
+  {{\parskip=0pt\parindent=0pt\par\vskip #1\noindent}}
+
+% can be used, for instance, to redefine the code size, by setting the
+% command to \small or something alike
+\newcommand{\hscodestyle}{}
+
+% The command \sethscode can be used to switch the code formatting
+% behaviour by mapping the hscode environment in the subst directive
+% to a new LaTeX environment.
+
+\newcommand{\sethscode}[1]%
+  {\expandafter\let\expandafter\hscode\csname #1\endcsname
+   \expandafter\let\expandafter\endhscode\csname end#1\endcsname}
+
+% "compatibility" mode restores the non-polycode.fmt layout.
+
+\newenvironment{compathscode}%
+  {\par\noindent
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
+  {\endpboxed\)%
+   \par\noindent
+   \ignorespacesafterend}
+
+\newcommand{\compaths}{\sethscode{compathscode}}
+
+% "plain" mode is the proposed default.
+% It should now work with \centering.
+% This required some changes. The old version
+% is still available for reference as oldplainhscode.
+
+\newenvironment{plainhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
+  {\endpboxed%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+\newenvironment{oldplainhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \(\pboxed}%
+  {\endpboxed\)%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+% Here, we make plainhscode the default environment.
+
+\newcommand{\plainhs}{\sethscode{plainhscode}}
+\newcommand{\oldplainhs}{\sethscode{oldplainhscode}}
+\plainhs
+
+% The arrayhscode is like plain, but makes use of polytable's
+% parray environment which disallows page breaks in code blocks.
+
+\newenvironment{arrayhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \(\parray}%
+  {\endparray\)%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+\newcommand{\arrayhs}{\sethscode{arrayhscode}}
+
+% The mathhscode environment also makes use of polytable's parray 
+% environment. It is supposed to be used only inside math mode 
+% (I used it to typeset the type rules in my thesis).
+
+\newenvironment{mathhscode}%
+  {\parray}{\endparray}
+
+\newcommand{\mathhs}{\sethscode{mathhscode}}
+
+% texths is similar to mathhs, but works in text mode.
+
+\newenvironment{texthscode}%
+  {\(\parray}{\endparray\)}
+
+\newcommand{\texths}{\sethscode{texthscode}}
+
+% The framed environment places code in a framed box.
+
+\def\codeframewidth{\arrayrulewidth}
+\RequirePackage{calc}
+
+\newenvironment{framedhscode}%
+  {\parskip=\abovedisplayskip\par\noindent
+   \hscodestyle
+   \arrayrulewidth=\codeframewidth
+   \tabular{@{}|p{\linewidth-2\arraycolsep-2\arrayrulewidth-2pt}|@{}}%
+   \hline\framedhslinecorrect\\{-1.5ex}%
+   \let\endoflinesave=\\
+   \let\\=\@normalcr
+   \(\pboxed}%
+  {\endpboxed\)%
+   \framedhslinecorrect\endoflinesave{.5ex}\hline
+   \endtabular
+   \parskip=\belowdisplayskip\par\noindent
+   \ignorespacesafterend}
+
+\newcommand{\framedhslinecorrect}[2]%
+  {#1[#2]}
+
+\newcommand{\framedhs}{\sethscode{framedhscode}}
+
+% The inlinehscode environment is an experimental environment
+% that can be used to typeset displayed code inline.
+
+\newenvironment{inlinehscode}%
+  {\(\def\column##1##2{}%
+   \let\>\undefined\let\<\undefined\let\\\undefined
+   \newcommand\>[1][]{}\newcommand\<[1][]{}\newcommand\\[1][]{}%
+   \def\fromto##1##2##3{##3}%
+   \def\nextline{}}{\) }%
+
+\newcommand{\inlinehs}{\sethscode{inlinehscode}}
+
+% The joincode environment is a separate environment that
+% can be used to surround and thereby connect multiple code
+% blocks.
+
+\newenvironment{joincode}%
+  {\let\orighscode=\hscode
+   \let\origendhscode=\endhscode
+   \def\endhscode{\def\hscode{\endgroup\def\@currenvir{hscode}\\}\begingroup}
+   %\let\SaveRestoreHook=\empty
+   %\let\ColumnHook=\empty
+   %\let\resethooks=\empty
+   \orighscode\def\hscode{\endgroup\def\@currenvir{hscode}}}%
+  {\origendhscode
+   \global\let\hscode=\orighscode
+   \global\let\endhscode=\origendhscode}%
+
+\makeatother
+\EndFmtInput
+%
+\def\ana#1{\mathopen{[\!(}#1\mathclose{)\!]}}
+%%format (bin (n) (k)) = "\Big(\vcenter{\xymatrix@R=1pt{" n "\\" k "}}\Big)"
+
+%---------------------------------------------------------------------------
+
+\title{
+       	Cálculo de Programas
+\\
+       	Trabalho Prático
+\\
+       	MiEI+LCC --- 2020/21
+}
+
+\author{
+       	\dium
+\\
+       	Universidade do Minho
+}
+
+
+\date\mydate
+
+\makeindex
+\newcommand{\rn}[1]{\textcolor{red}{#1}}
+\begin{document}
+
+\maketitle
+
+\begin{center}\large
+\begin{tabular}{ll}
+\textbf{Grupo} nr. & 77 
+\\\hline
+a93241 & Francisco Reis Izquierdo	
+\\
+a93273 & José Pedro Martins Magalhães
+\\
+a89526 & Duarte Augusto Rodrigues Lucas	
+\\
+a93185 & Carlos Filipe Almeida Dias
+\end{tabular}
+\end{center}
+
+\section{Preâmbulo}
+
+\CP\ tem como objectivo principal ensinar
+a progra\-mação de computadores como uma disciplina científica. Para isso
+parte-se de um repertório de \emph{combinadores} que formam uma álgebra da
+programação (conjunto de leis universais e seus corolários) e usam-se esses
+combinadores para construir programas \emph{composicionalmente}, isto é,
+agregando programas já existentes.
+  
+Na sequência pedagógica dos planos de estudo dos dois cursos que têm
+esta disciplina, opta-se pela aplicação deste método à programação
+em \Haskell\ (sem prejuízo da sua aplicação a outras linguagens 
+funcionais). Assim, o presente trabalho prático coloca os
+alunos perante problemas concretos que deverão ser implementados em
+\Haskell.  Há ainda um outro objectivo: o de ensinar a documentar
+programas, a validá-los e a produzir textos técnico-científicos de
+qualidade.
+
+\section{Documentação} Para cumprir de forma integrada os objectivos
+enunciados acima vamos recorrer a uma técnica de programa\-ção dita
+``\litp{literária}'' \cite{Kn92}, cujo princípio base é o seguinte:
+%
+\begin{quote}\em Um programa e a sua documentação devem coincidir.
+\end{quote}
+%
+Por outras palavras, o código fonte e a documentação de um
+programa deverão estar no mesmo ficheiro.
+
+O ficheiro \texttt{cp2021t.pdf} que está a ler é já um exemplo de
+\litp{programação literária}: foi gerado a partir do texto fonte
+\texttt{cp2021t.lhs}\footnote{O suffixo `lhs' quer dizer
+\emph{\lhaskell{literate Haskell}}.} que encontrará no
+\MaterialPedagogico\ desta disciplina descompactando o ficheiro
+\texttt{cp2021t.zip} e executando:
+\begin{Verbatim}[fontsize=\small]
+    $ lhs2TeX cp2021t.lhs > cp2021t.tex
+    $ pdflatex cp2021t
+\end{Verbatim}
+em que \href{https://hackage.haskell.org/package/lhs2tex}{\texttt\LhsToTeX} é
+um pre-processador que faz ``pretty printing''
+de código Haskell em \Latex\ e que deve desde já instalar executando
+\begin{Verbatim}[fontsize=\small]
+    $ cabal install lhs2tex --lib
+\end{Verbatim}
+Por outro lado, o mesmo ficheiro \texttt{cp2021t.lhs} é executável e contém
+o ``kit'' básico, escrito em \Haskell, para realizar o trabalho. Basta executar
+\begin{Verbatim}[fontsize=\small]
+    $ ghci cp2021t.lhs
+\end{Verbatim}
+
+
+\noindent Abra o ficheiro \texttt{cp2021t.lhs} no seu editor de texto preferido
+e verifique que assim é: todo o texto que se encontra dentro do ambiente
+\begin{quote}\small\tt
+\text{\ttfamily \char92{}begin\char123{}code\char125{}}
+\\ ... \\
+\text{\ttfamily \char92{}end\char123{}code\char125{}}
+\end{quote}
+é seleccionado pelo \GHCi\ para ser executado.
+
+\section{Como realizar o trabalho}
+Este trabalho teórico-prático deve ser realizado por grupos de 3 (ou 4) alunos.
+Os detalhes da avaliação (datas para submissão do relatório e sua defesa
+oral) são os que forem publicados na \cp{página da disciplina} na \emph{internet}.
+
+Recomenda-se uma abordagem participativa dos membros do grupo
+de trabalho por forma a poderem responder às questões que serão colocadas
+na \emph{defesa oral} do relatório.
+
+Em que consiste, então, o \emph{relatório} a que se refere o parágrafo anterior?
+É a edição do texto que está a ser lido, preenchendo o anexo \ref{sec:resolucao}
+com as respostas. O relatório deverá conter ainda a identificação dos membros
+do grupo de trabalho, no local respectivo da folha de rosto.
+
+Para gerar o PDF integral do relatório deve-se ainda correr os comando seguintes,
+que actualizam a bibliografia (com \Bibtex) e o índice remissivo (com \Makeindex),
+\begin{Verbatim}[fontsize=\small]
+    $ bibtex cp2021t.aux
+    $ makeindex cp2021t.idx
+\end{Verbatim}
+e recompilar o texto como acima se indicou. Dever-se-á ainda instalar o utilitário
+\QuickCheck,
+que ajuda a validar programas em \Haskell\ e a biblioteca \gloss{Gloss} para
+geração de gráficos 2D:
+\begin{Verbatim}[fontsize=\small]
+    $ cabal install QuickCheck gloss --lib
+\end{Verbatim}
+Para testar uma propriedade \QuickCheck~\ensuremath{\Varid{prop}}, basta invocá-la com o comando:
+\begin{tabbing}\ttfamily
+~~~~~\char62{}~quickCheck~prop\\
+\ttfamily ~~~~~\char43{}\char43{}\char43{}~OK\char44{}~passed~100~tests\char46{}
+\end{tabbing}
+Pode-se ainda controlar o número de casos de teste e sua complexidade,
+como o seguinte exemplo mostra:
+\begin{tabbing}\ttfamily
+~~~~~\char62{}~quickCheckWith~stdArgs~\char123{}~maxSuccess~\char61{}~200\char44{}~maxSize~\char61{}~10~\char125{}~prop\\
+\ttfamily ~~~~~\char43{}\char43{}\char43{}~OK\char44{}~passed~200~tests\char46{}
+\end{tabbing}
+Qualquer programador tem, na vida real, de ler e analisar (muito!) código
+escrito por outros. No anexo \ref{sec:codigo} disponibiliza-se algum
+código \Haskell\ relativo aos problemas que se seguem. Esse anexo deverá
+ser consultado e analisado à medida que isso for necessário.
+
+\subsection{Stack}
+
+O \stack{Stack} é um programa útil para criar, gerir e manter projetos em \Haskell.
+Um projeto criado com o Stack possui uma estrutura de pastas muito específica:
+
+\begin{itemize}
+\item Os módulos auxiliares encontram-se na pasta \emph{src}.
+\item O módulos principal encontra-se na pasta \emph{app}.
+\item A lista de depêndencias externas encontra-se no ficheiro \emph{package.yaml}.
+\end{itemize}
+
+Pode aceder ao \GHCi\ utilizando o comando:
+\begin{tabbing}\ttfamily
+~stack~ghci
+\end{tabbing}
+
+Garanta que se encontra na pasta mais externa \textbf{do projeto}.
+A primeira vez que correr este comando as depêndencias externas serão instaladas automaticamente.
+
+Para gerar o PDF, garanta que se encontra na diretoria \emph{app}.
+
+\Problema
+
+Os \emph{tipos de dados algébricos} estudados ao longo desta disciplina oferecem
+uma grande capacidade expressiva ao programador. Graças à sua flexibilidade,
+torna-se trivial implementar \DSL s
+e até mesmo \href{http://www.cse.chalmers.se/~ulfn/papers/thesis.pdf}{linguagens de programação}.
+
+Paralelamente, um tópico bastante estudado no âmbito de \DL\ 
+é a derivação automática de expressões matemáticas, por exemplo, de derivadas.
+Duas técnicas que podem ser utilizadas para o cálculo de derivadas são:
+
+\begin{itemize}
+\item \emph{Symbolic differentiation}
+\item \emph{Automatic differentiation}
+\end{itemize}
+
+\emph{Symbolic differentiation} consiste na aplicação sucessiva de transformações
+(leia-se: funções) que sejam congruentes com as regras de derivação. O resultado
+final será a expressão da derivada.
+
+O leitor atento poderá notar um problema desta técnica: a expressão
+inicial pode crescer de forma descontrolada, levando a um cálculo pouco eficiente.
+\emph{Automatic differentiation} tenta resolver este problema,
+calculando \textbf{o valor} da derivada da expressão em todos os passos.
+Para tal, é necessário calcular o valor da expressão \textbf{e} o valor da sua derivada.
+
+Vamos de seguida definir uma linguagem de expressões matemáticas simples e
+implementar as duas técnicas de derivação automática.
+Para isso, seja dado o seguinte tipo de dados,
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{12}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{data}\;\Conid{ExpAr}\;\Varid{a}\mathrel{=}\Conid{X}{}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mid \Conid{N}\;\Varid{a}{}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mid \Conid{Bin}\;\Conid{BinOp}\;(\Conid{ExpAr}\;\Varid{a})\;(\Conid{ExpAr}\;\Varid{a}){}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mid \Conid{Un}\;\Conid{UnOp}\;(\Conid{ExpAr}\;\Varid{a}){}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mathbf{deriving}\;(\Conid{Eq},\Conid{Show}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\noindent
+onde \ensuremath{\Conid{BinOp}} e \ensuremath{\Conid{UnOp}} representam operações binárias e unárias, respectivamente:
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{12}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{data}\;\Conid{BinOp}\mathrel{=}\Conid{Sum}{}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mid \Conid{Product}{}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mathbf{deriving}\;(\Conid{Eq},\Conid{Show}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{data}\;\Conid{UnOp}\mathrel{=}\Conid{Negate}{}\<[E]%
+\\
+\>[B]{}\hsindent{11}{}\<[11]%
+\>[11]{}\mid \Conid{E}{}\<[E]%
+\\
+\>[B]{}\hsindent{11}{}\<[11]%
+\>[11]{}\mathbf{deriving}\;(\Conid{Eq},\Conid{Show}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\noindent
+O construtor \ensuremath{\Conid{E}} simboliza o exponencial de base $e$.
+
+Assim, cada expressão pode ser uma variável, um número, uma operação binária
+aplicada às devidas expressões, ou uma operação unária aplicada a uma expressão.
+Por exemplo,
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Conid{Bin}\;\Conid{Sum}\;\Conid{X}\;(\Conid{N}\;\mathrm{10}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+designa \ensuremath{\Varid{x}\mathbin{+}\mathrm{10}} na notação matemática habitual.
+
+\begin{enumerate}
+\item A definição das funções \ensuremath{\mathsf{in}} e \ensuremath{\Varid{baseExpAr}} para este tipo é a seguinte:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathsf{in}\mathrel{=}\alt{\underline{\Conid{X}}}{\Varid{num\char95 ops}}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{num\char95 ops}\mathrel{=}\alt{\Conid{N}}{\Varid{ops}}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{ops}{}\<[11]%
+\>[11]{}\mathrel{=}\alt{\Varid{bin}}{\uncurry{\Conid{Un}}}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{bin}\;(\Varid{op},(\Varid{a},\Varid{b}))\mathrel{=}\Conid{Bin}\;\Varid{op}\;\Varid{a}\;\Varid{b}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{baseExpAr}\;\Varid{f}\;\Varid{g}\;\Varid{h}\;\Varid{j}\;\Varid{k}\;\Varid{l}\;\Varid{z}\mathrel{=}\Varid{f}+(\Varid{g}+(\Varid{h}\times(\Varid{j}\times\Varid{k})+\Varid{l}\times\Varid{z})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+  Defina as funções \ensuremath{\Varid{outExpAr}} e \ensuremath{\Varid{recExpAr}},
+  e teste as propriedades que se seguem.
+  \begin{propriedade}
+    \ensuremath{\mathsf{in}} e \ensuremath{\Varid{outExpAr}} são testemunhas de um isomorfismo,
+    isto é,
+    \ensuremath{\mathsf{in}\comp \Varid{outExpAr}\mathrel{=}\Varid{id}} e \ensuremath{\Varid{outExpAr}\comp \Varid{idExpAr}\mathrel{=}\Varid{id}}:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 in\char95 out\char95 idExpAr}\mathbin{::}(\Conid{Eq}\;\Varid{a})\Rightarrow \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 in\char95 out\char95 idExpAr}\mathrel{=}\mathsf{in}\comp \Varid{outExpAr}\equiv\Varid{id}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 out\char95 in\char95 idExpAr}\mathbin{::}(\Conid{Eq}\;\Varid{a})\Rightarrow \Conid{OutExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 out\char95 in\char95 idExpAr}\mathrel{=}\Varid{outExpAr}\comp \mathsf{in}\equiv\Varid{id}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+    \end{propriedade}
+
+  \item Dada uma expressão aritmética e um escalar para substituir o \ensuremath{\Conid{X}},
+	a função
+
+\begin{quote}
+      \ensuremath{\Varid{eval\char95 exp}\mathbin{::}\Conid{Floating}\;\Varid{a}\Rightarrow \Varid{a}\to (\Conid{ExpAr}\;\Varid{a})\to \Varid{a}}
+\end{quote}
+
+\noindent calcula o resultado da expressão. Na página \pageref{pg:P1}
+    esta função está expressa como um catamorfismo. Defina o respectivo gene
+    e, de seguida, teste as propriedades:
+    \begin{propriedade}
+       A função \ensuremath{\Varid{eval\char95 exp}} respeita os elementos neutros das operações.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 sum\char95 idr}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 sum\char95 idr}\;\Varid{a}\;\Varid{exp}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;\Varid{exp}\mathbin{\stackrel{\mathrm{?}}{=}}\Varid{sum\char95 idr}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{sum\char95 idr}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;(\Conid{Bin}\;\Conid{Sum}\;\Varid{exp}\;(\Conid{N}\;\mathrm{0})){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 sum\char95 idl}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 sum\char95 idl}\;\Varid{a}\;\Varid{exp}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;\Varid{exp}\mathbin{\stackrel{\mathrm{?}}{=}}\Varid{sum\char95 idl}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{sum\char95 idl}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;(\Conid{Bin}\;\Conid{Sum}\;(\Conid{N}\;\mathrm{0})\;\Varid{exp}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 product\char95 idr}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 product\char95 idr}\;\Varid{a}\;\Varid{exp}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;\Varid{exp}\mathbin{\stackrel{\mathrm{?}}{=}}\Varid{prod\char95 idr}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{prod\char95 idr}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;(\Conid{Bin}\;\Conid{Product}\;\Varid{exp}\;(\Conid{N}\;\mathrm{1})){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 product\char95 idl}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 product\char95 idl}\;\Varid{a}\;\Varid{exp}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;\Varid{exp}\mathbin{\stackrel{\mathrm{?}}{=}}\Varid{prod\char95 idl}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{prod\char95 idl}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;(\Conid{Bin}\;\Conid{Product}\;(\Conid{N}\;\mathrm{1})\;\Varid{exp}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 e\char95 id}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 e\char95 id}\;\Varid{a}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;(\Conid{Un}\;\Conid{E}\;(\Conid{N}\;\mathrm{1}))\equiv \Varid{expd}\;\mathrm{1}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 negate\char95 id}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 negate\char95 id}\;\Varid{a}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;(\Conid{Un}\;\Conid{Negate}\;(\Conid{N}\;\mathrm{0}))\equiv \mathrm{0}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+    \end{propriedade}
+    \begin{propriedade}
+      Negar duas vezes uma expressão tem o mesmo valor que não fazer nada.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 double\char95 negate}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 double\char95 negate}\;\Varid{a}\;\Varid{exp}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;\Varid{exp}\mathbin{\stackrel{\mathrm{?}}{=}}\Varid{eval\char95 exp}\;\Varid{a}\;(\Conid{Un}\;\Conid{Negate}\;(\Conid{Un}\;\Conid{Negate}\;\Varid{exp})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+    \end{propriedade}
+
+  \item É possível otimizar o cálculo do valor de uma expressão aritmética tirando proveito
+  dos elementos absorventes de cada operação. Implemente os genes da função
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[7]{}\Varid{optmize\char95 eval}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Eq}\;\Varid{a})\Rightarrow \Varid{a}\to (\Conid{ExpAr}\;\Varid{a})\to \Varid{a}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+  que se encontra na página \pageref{pg:P1} expressa como um hilomorfismo\footnote{Qual é a vantagem de implementar a função \ensuremath{\Varid{optimize\char95 eval}} utilizando um hilomorfismo em vez de utilizar um catamorfismo com um gene "inteligente"?}
+  e teste as propriedades:
+
+    \begin{propriedade}
+      A função \ensuremath{\Varid{optimize\char95 eval}} respeita a semântica da função \ensuremath{\Varid{eval}}.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 optimize\char95 respects\char95 semantics}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 optimize\char95 respects\char95 semantics}\;\Varid{a}\;\Varid{exp}\mathrel{=}\Varid{eval\char95 exp}\;\Varid{a}\;\Varid{exp}\mathbin{\stackrel{\mathrm{?}}{=}}\Varid{optmize\char95 eval}\;\Varid{a}\;\Varid{exp}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+    \end{propriedade}
+
+
+\item Para calcular a derivada de uma expressão, é necessário aplicar transformações
+à expressão original que respeitem as regras das derivadas:\footnote{%
+	Apesar da adição e multiplicação gozarem da propriedade comutativa,
+	há que ter em atenção a ordem das operações por causa dos testes.}
+
+\begin{itemize}
+  \item Regra da soma:
+\begin{eqnarray*}
+	\frac{d}{dx}(f(x)+g(x))=\frac{d}{dx}(f(x))+\frac{d}{dx}(g(x))
+\end{eqnarray*}
+  \item Regra do produto:
+\begin{eqnarray*}
+	\frac{d}{dx}(f(x)g(x))=f(x)\cdot \frac{d}{dx}(g(x))+\frac{d}{dx}(f(x))\cdot g(x)
+\end{eqnarray*}
+\end{itemize}
+
+  Defina o gene do catamorfismo que ocorre na função
+    \begin{quote}
+      \ensuremath{\Varid{sd}\mathbin{::}\Conid{Floating}\;\Varid{a}\Rightarrow \Conid{ExpAr}\;\Varid{a}\to \Conid{ExpAr}\;\Varid{a}}
+    \end{quote}
+  que, dada uma expressão aritmética, calcula a sua derivada.
+  Testes a fazer, de seguida:
+    \begin{propriedade}
+       A função \ensuremath{\Varid{sd}} respeita as regras de derivação.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 const\char95 rule}\mathbin{::}(\Conid{Real}\;\Varid{a},\Conid{Floating}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 const\char95 rule}\;\Varid{a}\mathrel{=}\Varid{sd}\;(\Conid{N}\;\Varid{a})\equiv \Conid{N}\;\mathrm{0}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 var\char95 rule}\mathbin{::}\Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 var\char95 rule}\mathrel{=}\Varid{sd}\;\Conid{X}\equiv \Conid{N}\;\mathrm{1}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 sum\char95 rule}\mathbin{::}(\Conid{Real}\;\Varid{a},\Conid{Floating}\;\Varid{a})\Rightarrow \Conid{ExpAr}\;\Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 sum\char95 rule}\;\Varid{exp1}\;\Varid{exp2}\mathrel{=}\Varid{sd}\;(\Conid{Bin}\;\Conid{Sum}\;\Varid{exp1}\;\Varid{exp2})\equiv \Varid{sum\char95 rule}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{sum\char95 rule}\mathrel{=}\Conid{Bin}\;\Conid{Sum}\;(\Varid{sd}\;\Varid{exp1})\;(\Varid{sd}\;\Varid{exp2}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 product\char95 rule}\mathbin{::}(\Conid{Real}\;\Varid{a},\Conid{Floating}\;\Varid{a})\Rightarrow \Conid{ExpAr}\;\Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 product\char95 rule}\;\Varid{exp1}\;\Varid{exp2}\mathrel{=}\Varid{sd}\;(\Conid{Bin}\;\Conid{Product}\;\Varid{exp1}\;\Varid{exp2})\equiv \Varid{prod\char95 rule}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{prod\char95 rule}\mathrel{=}\Conid{Bin}\;\Conid{Sum}\;(\Conid{Bin}\;\Conid{Product}\;\Varid{exp1}\;(\Varid{sd}\;\Varid{exp2}))\;(\Conid{Bin}\;\Conid{Product}\;(\Varid{sd}\;\Varid{exp1})\;\Varid{exp2}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 e\char95 rule}\mathbin{::}(\Conid{Real}\;\Varid{a},\Conid{Floating}\;\Varid{a})\Rightarrow \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 e\char95 rule}\;\Varid{exp}\mathrel{=}\Varid{sd}\;(\Conid{Un}\;\Conid{E}\;\Varid{exp})\equiv \Conid{Bin}\;\Conid{Product}\;(\Conid{Un}\;\Conid{E}\;\Varid{exp})\;(\Varid{sd}\;\Varid{exp}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{prop\char95 negate\char95 rule}\mathbin{::}(\Conid{Real}\;\Varid{a},\Conid{Floating}\;\Varid{a})\Rightarrow \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 negate\char95 rule}\;\Varid{exp}\mathrel{=}\Varid{sd}\;(\Conid{Un}\;\Conid{Negate}\;\Varid{exp})\equiv \Conid{Un}\;\Conid{Negate}\;(\Varid{sd}\;\Varid{exp}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+    \end{propriedade}
+
+\item Como foi visto, \emph{Symbolic differentiation} não é a técnica
+mais eficaz para o cálculo do valor da derivada de uma expressão.
+\emph{Automatic differentiation} resolve este problema cálculando o valor
+da derivada em vez de manipular a expressão original.
+
+  Defina o gene do catamorfismo que ocorre na função
+    \begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{ad}\mathbin{::}\Conid{Floating}\;\Varid{a}\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Varid{a}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+  que, dada uma expressão aritmética e um ponto,
+  calcula o valor da sua derivada nesse ponto,
+  sem transformar manipular a expressão original.
+  Testes a fazer, de seguida:
+
+    \begin{propriedade}
+       Calcular o valor da derivada num ponto \ensuremath{\Varid{r}} via \ensuremath{\Varid{ad}} é equivalente a calcular a derivada da expressão e avalia-la no ponto \ensuremath{\Varid{r}}.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 congruent}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Real}\;\Varid{a})\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 congruent}\;\Varid{a}\;\Varid{exp}\mathrel{=}\Varid{ad}\;\Varid{a}\;\Varid{exp}\mathbin{\stackrel{\mathrm{?}}{=}}\Varid{eval\char95 exp}\;\Varid{a}\;(\Varid{sd}\;\Varid{exp}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+    \end{propriedade}
+\end{enumerate}
+
+\Problema
+
+Nesta disciplina estudou-se como fazer \pd{programação dinâmica} por cálculo,
+recorrendo à lei de recursividade mútua.\footnote{Lei (\ref{eq:fokkinga})
+em \cite{Ol18}, página \pageref{eq:fokkinga}.}
+
+Para o caso de funções sobre os números naturais (\ensuremath{\N_0}, com functor \ensuremath{\fun F \;\Conid{X}\mathrel{=}\mathrm{1}\mathbin{+}\Conid{X}}) é fácil derivar-se da lei que foi estudada uma
+	\emph{regra de algibeira}
+	\label{pg:regra}
+que se pode ensinar a programadores que não tenham estudado
+\cp{Cálculo de Programas}. Apresenta-se de seguida essa regra, tomando como exemplo o
+cálculo do ciclo-\textsf{for} que implementa a função de Fibonacci, recordar
+o sistema
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{fib}\;\mathrm{0}\mathrel{=}\mathrm{1}{}\<[E]%
+\\
+\>[B]{}\Varid{fib}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{f}\;\Varid{n}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{f}\;\mathrm{0}\mathrel{=}\mathrm{1}{}\<[E]%
+\\
+\>[B]{}\Varid{f}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{fib}\;\Varid{n}\mathbin{+}\Varid{f}\;\Varid{n}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Obter-se-á de imediato
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{fib'}\mathrel{=}\p1\comp \for{\Varid{loop}}\ {\Varid{init}}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{loop}\;(\Varid{fib},\Varid{f})\mathrel{=}(\Varid{f},\Varid{fib}\mathbin{+}\Varid{f}){}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{init}\mathrel{=}(\mathrm{1},\mathrm{1}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+usando as regras seguintes:
+\begin{itemize}
+\item	O corpo do ciclo \ensuremath{\Varid{loop}} terá tantos argumentos quanto o número de funções mutuamente recursivas.
+\item	Para as variáveis escolhem-se os próprios nomes das funções, pela ordem
+que se achar conveniente.\footnote{Podem obviamente usar-se outros símbolos, mas numa primeira leitura
+dá jeito usarem-se tais nomes.}
+\item	Para os resultados vão-se buscar as expressões respectivas, retirando a variável \ensuremath{\Varid{n}}.
+\item	Em \ensuremath{\Varid{init}} coleccionam-se os resultados dos casos de base das funções, pela mesma ordem.
+\end{itemize}
+Mais um exemplo, envolvendo polinómios do segundo grau $ax^2 + b x + c$ em \ensuremath{\N_0}.
+Seguindo o método estudado nas aulas\footnote{Secção 3.17 de \cite{Ol18} e tópico
+\href{https://www4.di.uminho.pt/~jno/media/cp/}{Recursividade mútua} nos vídeos das aulas teóricas.},
+de $f\ x = a x^2 + b x + c$ derivam-se duas funções mutuamente recursivas:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{f}\;\mathrm{0}\mathrel{=}\Varid{c}{}\<[E]%
+\\
+\>[B]{}\Varid{f}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{f}\;\Varid{n}\mathbin{+}\Varid{k}\;\Varid{n}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{k}\;\mathrm{0}\mathrel{=}\Varid{a}\mathbin{+}\Varid{b}{}\<[E]%
+\\
+\>[B]{}\Varid{k}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{k}\;\Varid{n}\mathbin{+}\mathrm{2}\;\Varid{a}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Seguindo a regra acima, calcula-se de imediato a seguinte implementação, em Haskell:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{f'}\;\Varid{a}\;\Varid{b}\;\Varid{c}\mathrel{=}\p1\comp \for{\Varid{loop}}\ {\Varid{init}}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{loop}\;(\Varid{f},\Varid{k})\mathrel{=}(\Varid{f}\mathbin{+}\Varid{k},\Varid{k}\mathbin{+}\mathrm{2}\mathbin{*}\Varid{a}){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{init}\mathrel{=}(\Varid{c},\Varid{a}\mathbin{+}\Varid{b}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+O que se pede então, nesta pergunta?
+Dada a fórmula que dá o \ensuremath{\Varid{n}}-ésimo \catalan{número de Catalan},
+\begin{eqnarray}
+	C_n = \frac{(2n)!}{(n+1)! (n!) }
+	\label{eq:cat}
+\end{eqnarray}
+derivar uma implementação de $C_n$ que não calcule factoriais nenhuns.
+Isto é, derivar um ciclo-\textsf{for}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{cat}\mathrel{=}\cdots \comp \for{\Varid{loop}}\ {\Varid{init}}\;\mathbf{where}\;\cdots {}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+que implemente esta função.
+
+\begin{propriedade}
+A função proposta coincidem com a definição dada:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{33}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 cat}\mathrel{=}(\geq \mathrm{0})\Rightarrow(\Varid{catdef}{}\<[33]%
+\>[33]{}\equiv\Varid{cat}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\end{propriedade}
+%
+\textbf{Sugestão}: Começar por estudar muito bem o processo de cálculo dado
+no anexo \ref{sec:recmul} para o problema (semelhante) da função exponencial.
+
+
+\Problema 
+
+As \bezier{curvas de Bézier}, designação dada em honra ao engenheiro
+\href{https://en.wikipedia.org/wiki/Pierre_B%C3%A9zier}{Pierre Bézier},
+são curvas ubíquas na área de computação gráfica, animação e modelação.
+Uma curva de Bézier é uma curva paramétrica, definida por um conjunto
+$\{P_0,...,P_N\}$ de pontos de controlo, onde $N$ é a ordem da curva.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{cp2021t_media/Bezier_curves.png}
+  \caption{Exemplos de curvas de Bézier retirados da \bezier{ Wikipedia}.}
+\end{figure}
+
+O algoritmo de \emph{De Casteljau} é um método recursivo capaz de calcular
+curvas de Bézier num ponto. Apesar de ser mais lento do que outras abordagens,
+este algoritmo é numericamente mais estável, trocando velocidade por correção.
+
+De forma sucinta, o valor de uma curva de Bézier de um só ponto $\{P_0\}$
+(ordem $0$) é o próprio ponto $P_0$. O valor de uma curva de Bézier de ordem
+$N$ é calculado através da interpolação linear da curva de Bézier dos primeiros
+$N-1$ pontos e da curva de Bézier dos últimos $N-1$ pontos.
+
+A interpolação linear entre 2 números, no intervalo $[0, 1]$, é dada pela
+seguinte função:
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{linear1d}\mathbin{::}\Q \to \Q \to \Conid{OverTime}\;\Q {}\<[E]%
+\\
+\>[B]{}\Varid{linear1d}\;\Varid{a}\;\Varid{b}\mathrel{=}\Varid{formula}\;\Varid{a}\;\Varid{b}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{formula}\mathbin{::}\Q \to \Q \to \Conid{Float}\to \Q {}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{formula}\;\Varid{x}\;\Varid{y}\;\Varid{t}\mathrel{=}((\mathrm{1.0}\mathbin{::}\Q )\mathbin{-}( to_\Q \;\Varid{t}))\mathbin{*}\Varid{x}\mathbin{+}( to_\Q \;\Varid{t})\mathbin{*}\Varid{y}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%
+A interpolação linear entre 2 pontos de dimensão $N$ é calculada através
+da interpolação linear de cada dimensão.
+
+O tipo de dados \ensuremath{\Conid{NPoint}} representa um ponto com $N$ dimensões.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{type}\;\Conid{NPoint}\mathrel{=}[\mskip1.5mu \Q \mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Por exemplo, um ponto de 2 dimensões e um ponto de 3 dimensões podem ser
+representados, respetivamente, por:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{p2d}\mathrel{=}[\mskip1.5mu \mathrm{1.2},\mathrm{3.4}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{p3d}\mathrel{=}[\mskip1.5mu \mathrm{0.2},\mathrm{10.3},\mathrm{2.4}\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%
+O tipo de dados \ensuremath{\Conid{OverTime}\;\Varid{a}} representa um termo do tipo \ensuremath{\Varid{a}} num dado instante
+(dado por um \ensuremath{\Conid{Float}}).
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{type}\;\Conid{OverTime}\;\Varid{a}\mathrel{=}\Conid{Float}\to \Varid{a}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%
+O anexo \ref{sec:codigo} tem definida a função 
+    \begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{calcLine}\mathbin{::}\Conid{NPoint}\to (\Conid{NPoint}\to \Conid{OverTime}\;\Conid{NPoint}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+que calcula a interpolação linear entre 2 pontos, e a função
+    \begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{deCasteljau}\mathbin{::}[\mskip1.5mu \Conid{NPoint}\mskip1.5mu]\to \Conid{OverTime}\;\Conid{NPoint}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+que implementa o algoritmo respectivo.
+
+\begin{enumerate}
+
+\item Implemente \ensuremath{\Varid{calcLine}} como um catamorfismo de listas,
+testando a sua definição com a propriedade:
+    \begin{propriedade} Definição alternativa.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{46}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 calcLine\char95 def}\mathbin{::}\Conid{NPoint}\to \Conid{NPoint}\to \Conid{Float}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 calcLine\char95 def}\;\Varid{p}\;\Varid{q}\;\Varid{d}\mathrel{=}\Varid{calcLine}\;\Varid{p}\;\Varid{q}\;\Varid{d}\equiv {}\<[46]%
+\>[46]{}\Varid{zipWithM}\;\Varid{linear1d}\;\Varid{p}\;\Varid{q}\;\Varid{d}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+    \end{propriedade}
+
+\item Implemente a função \ensuremath{\Varid{deCasteljau}} como um hilomorfismo, testando agora a propriedade:
+    \begin{propriedade}
+      Curvas de Bézier são simétricas.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{13}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{71}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 bezier\char95 sym}\mathbin{::}[\mskip1.5mu [\mskip1.5mu \Q \mskip1.5mu]\mskip1.5mu]\to \Conid{Gen}\;\Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 bezier\char95 sym}\;\Varid{l}\mathrel{=}\Varid{all}\;(\mathbin{<}\Delta )\comp \Varid{calc\char95 difs}\comp \Varid{bezs}\mathbin{\mathopen{\langle}\$\mathclose{\rangle}}\Varid{elements}\;\Varid{ps}\;{}\<[71]%
+\>[71]{}\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{calc\char95 difs}\mathrel{=}(\lambda (\Varid{x},\Varid{y})\to \Varid{zipWith}\;(\lambda \Varid{w}\;\Varid{v}\to \mathbf{if}\;\Varid{w}\geq \Varid{v}\;\mathbf{then}\;\Varid{w}\mathbin{-}\Varid{v}\;\mathbf{else}\;\Varid{v}\mathbin{-}\Varid{w})\;\Varid{x}\;\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{bezs}\;\Varid{t}{}\<[13]%
+\>[13]{}\mathrel{=}(\Varid{deCasteljau}\;\Varid{l}\;\Varid{t},\Varid{deCasteljau}\;(\Varid{reverse}\;\Varid{l})\;( from_\Q \;(\mathrm{1}\mathbin{-}( to_\Q \;\Varid{t})))){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Delta \mathrel{=}\mathrm{1e{-}2}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+    \end{propriedade}
+
+  \item Corra a função \ensuremath{\Varid{runBezier}} e aprecie o seu trabalho\footnote{%
+        A representação em Gloss é uma adaptação de um
+        \href{https://github.com/hrldcpr/Bezier.hs}{projeto}
+        de Harold Cooper.} clicando na janela que é aberta (que contém, a verde, um ponto
+        inicila) com o botão esquerdo do rato para adicionar mais pontos.
+        A tecla \ensuremath{\Conid{Delete}} apaga o ponto mais recente.
+
+\end{enumerate}
+
+\Problema
+
+Seja dada a fórmula que calcula a média de uma lista não vazia $x$,
+\begin{equation}
+avg\ x = \frac 1 k\sum_{i=1}^{k} x_i
+\end{equation}
+onde $k=length\ x$. Isto é, para sabermos a média de uma lista precisamos de dois catamorfismos: o que faz o somatório e o que calcula o comprimento a lista.
+Contudo, é facil de ver que
+\begin{quote}
+	$avg\ [a]=a$
+\\
+	$avg (a:x) = \frac 1 {k+1}(a+\sum_{i=1}^{k} x_i) = \frac{a+k(avg\ x)}{k+1}$ para $k=length\ x$
+\end{quote}
+Logo $avg$ está em recursividade mútua com $length$ e o par de funções pode ser expresso por um único catamorfismo, significando que a lista apenas é percorrida uma vez.
+
+\begin{enumerate}
+
+\item	Recorra à lei de recursividade mútua para derivar a função
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\cata{\alt{\Varid{b}}{\Varid{q}}}} tal que 
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\conj{\Varid{avg}}{\length }} em listas não vazias. 
+
+\item	Generalize o raciocínio anterior para o cálculo da média de todos os elementos de uma \LTree\ recorrendo a uma única travessia da árvore (i.e.\ catamorfismo).
+
+\end{enumerate}
+Verifique as suas funções testando a propriedade seguinte:
+\begin{propriedade}
+A média de uma lista não vazia e de uma \LTree\ com os mesmos elementos coincide,
+a menos de um erro de 0.1 milésimas:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prop\char95 avg}\mathbin{::}[\mskip1.5mu \Conid{Double}\mskip1.5mu]\to \Conid{Property}{}\<[E]%
+\\
+\>[B]{}\Varid{prop\char95 avg}\mathrel{=}\Varid{nonempty}\Rightarrow\Varid{diff}\leq\underline{\mathrm{0.000001}}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{diff}\;\Varid{l}\mathrel{=}\Varid{avg}\;\Varid{l}\mathbin{-}(\Varid{avgLTree}\comp \Varid{genLTree})\;\Varid{l}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{genLTree}\mathrel{=}\mathopen{[\!(}\Varid{lsplit}\mathclose{)\!]}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{nonempty}\mathrel{=}(\mathbin{>}[\mskip1.5mu \mskip1.5mu]){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\end{propriedade}
+
+\Problema	(\textbf{NB}: Esta questão é \textbf{opcional} e funciona como \textbf{valorização} apenas para os alunos que desejarem fazê-la.) 
+
+\vskip 1em \noindent
+Existem muitas linguagens funcionais para além do \Haskell, que é a linguagem usada neste trabalho prático. Uma delas é o \Fsharp\ da Microsoft. Na directoria \text{\ttfamily fsharp} encontram-se os módulos \Cp, \Nat\ e \LTree\ codificados em \Fsharp. O que se pede é a biblioteca \BTree\ escrita na mesma linguagem.
+
+Modo de execução: o código que tiverem produzido nesta pergunta deve ser colocado entre o \text{\ttfamily \char92{}begin\char123{}verbatim\char125{}} e o \text{\ttfamily \char92{}end\char123{}verbatim\char125{}} da correspondente parte do anexo \ref{sec:resolucao}. Para além disso, os grupos podem demonstrar o código na oral.
+
+\newpage
+
+\part*{Anexos}
+
+\appendix
+
+\section{Como exprimir cálculos e diagramas em LaTeX/lhs2tex}
+Como primeiro exemplo, estudar o texto fonte deste trabalho para obter o
+efeito:\footnote{Exemplos tirados de \cite{Ol18}.} 
+\begin{eqnarray*}
+\start
+	\ensuremath{\Varid{id}\mathrel{=}\conj{\Varid{f}}{\Varid{g}}}
+%
+\just\equiv{ universal property }
+%
+        \ensuremath{\begin{lcbr}\p1\comp \Varid{id}\mathrel{=}\Varid{f}\\\p2\comp \Varid{id}\mathrel{=}\Varid{g}\end{lcbr}}
+%
+\just\equiv{ identity }
+%
+        \ensuremath{\begin{lcbr}\p1\mathrel{=}\Varid{f}\\\p2\mathrel{=}\Varid{g}\end{lcbr}}
+\qed
+\end{eqnarray*}
+
+Os diagramas podem ser produzidos recorrendo à \emph{package} \LaTeX\ 
+\href{https://ctan.org/pkg/xymatrix}{xymatrix}, por exemplo: 
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\N_0}
+           \ar[d]_-{\ensuremath{\cata{\Varid{g}}}}
+&
+    \ensuremath{\mathrm{1}\mathbin{+}\N_0}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}\cata{\Varid{g}}}}
+           \ar[l]_-{\ensuremath{\mathsf{in}}}
+\\
+     \ensuremath{\Conid{B}}
+&
+     \ensuremath{\mathrm{1}\mathbin{+}\Conid{B}}
+           \ar[l]^-{\ensuremath{\Varid{g}}}
+}
+\end{eqnarray*}
+
+\section{Programação dinâmica por recursividade múltipla}\label{sec:recmul}
+Neste anexo dão-se os detalhes da resolução do Exercício \ref{ex:exp} dos apontamentos da
+disciplina\footnote{Cf.\ \cite{Ol18}, página \pageref{ex:exp}.},
+onde se pretende implementar um ciclo que implemente
+o cálculo da aproximação até \ensuremath{\Varid{i}\mathrel{=}\Varid{n}} da função exponencial $exp\ x = e^x$,
+via série de Taylor:
+\begin{eqnarray}
+	exp\ x 
+& = &
+	\sum_{i=0}^{\infty} \frac {x^i} {i!}
+\end{eqnarray}
+Seja $e\ x\ n = \sum_{i=0}^{n} \frac {x^i} {i!}$ a função que dá essa aproximação.
+É fácil de ver que \ensuremath{\Varid{e}\;\Varid{x}\;\mathrm{0}\mathrel{=}\mathrm{1}} e que $\ensuremath{\Varid{e}\;\Varid{x}\;(\Varid{n}\mathbin{+}\mathrm{1})} = \ensuremath{\Varid{e}\;\Varid{x}\;\Varid{n}} + \frac {x^{n+1}} {(n+1)!}$.
+Se definirmos $\ensuremath{\Varid{h}\;\Varid{x}\;\Varid{n}} = \frac {x^{n+1}} {(n+1)!}$ teremos \ensuremath{\Varid{e}\;\Varid{x}} e \ensuremath{\Varid{h}\;\Varid{x}} em recursividade
+mútua. Se repetirmos o processo para \ensuremath{\Varid{h}\;\Varid{x}\;\Varid{n}} etc obteremos no total três funções nessa mesma
+situação:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{e}\;\Varid{x}\;\mathrm{0}\mathrel{=}\mathrm{1}{}\<[E]%
+\\
+\>[B]{}\Varid{e}\;\Varid{x}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{h}\;\Varid{x}\;\Varid{n}\mathbin{+}\Varid{e}\;\Varid{x}\;\Varid{n}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{h}\;\Varid{x}\;\mathrm{0}\mathrel{=}\Varid{x}{}\<[E]%
+\\
+\>[B]{}\Varid{h}\;\Varid{x}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{x}\mathbin{/}(\Varid{s}\;\Varid{n})\mathbin{*}\Varid{h}\;\Varid{x}\;\Varid{n}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{s}\;\mathrm{0}\mathrel{=}\mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{s}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\mathrm{1}\mathbin{+}\Varid{s}\;\Varid{n}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Segundo a \emph{regra de algibeira} descrita na página \ref{pg:regra} deste enunciado,
+ter-se-á, de imediato:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{6}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{e'}\;\Varid{x}\mathrel{=}\Varid{prj}\comp \for{\Varid{loop}}\ {\Varid{init}}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{6}{}\<[6]%
+\>[6]{}\Varid{init}\mathrel{=}(\mathrm{1},\Varid{x},\mathrm{2}){}\<[E]%
+\\
+\>[B]{}\hsindent{6}{}\<[6]%
+\>[6]{}\Varid{loop}\;(\Varid{e},\Varid{h},\Varid{s})\mathrel{=}(\Varid{h}\mathbin{+}\Varid{e},\Varid{x}\mathbin{/}\Varid{s}\mathbin{*}\Varid{h},\mathrm{1}\mathbin{+}\Varid{s}){}\<[E]%
+\\
+\>[B]{}\hsindent{6}{}\<[6]%
+\>[6]{}\Varid{prj}\;(\Varid{e},\Varid{h},\Varid{s})\mathrel{=}\Varid{e}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\section{Código fornecido}\label{sec:codigo}
+
+\subsection*{Problema 1}
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{expd}\mathbin{::}\Conid{Floating}\;\Varid{a}\Rightarrow \Varid{a}\to \Varid{a}{}\<[E]%
+\\
+\>[B]{}\Varid{expd}\mathrel{=}\Varid{\Conid{Prelude}.exp}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{type}\;\Conid{OutExpAr}\;\Varid{a}\mathrel{=}()+(\Varid{a}+((\Conid{BinOp},(\Conid{ExpAr}\;\Varid{a},\Conid{ExpAr}\;\Varid{a}))+(\Conid{UnOp},\Conid{ExpAr}\;\Varid{a}))){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection*{Problema 2}
+Definição da série de Catalan usando factoriais (\ref{eq:cat}):
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{catdef}\;\Varid{n}\mathrel{=}{(\mathrm{2}\mathbin{*}\Varid{n})!}\div ({(\Varid{n}\mathbin{+}\mathrm{1})!}\mathbin{*}{\Varid{n}!}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Oráculo para inspecção dos primeiros 26 números de Catalan\footnote{Fonte:
+\catalan{Wikipedia}.}:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{oracle}\mathrel{=}[\mskip1.5mu {}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathrm{1},\mathrm{1},\mathrm{2},\mathrm{5},\mathrm{14},\mathrm{42},\mathrm{132},\mathrm{429},\mathrm{1430},\mathrm{4862},\mathrm{16796},\mathrm{58786},\mathrm{208012},\mathrm{742900},\mathrm{2674440},\mathrm{9694845},{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathrm{35357670},\mathrm{129644790},\mathrm{477638700},\mathrm{1767263190},\mathrm{6564120420},\mathrm{24466267020},{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathrm{91482563640},\mathrm{343059613650},\mathrm{1289904147324},\mathrm{4861946401452}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection*{Problema 3}
+Algoritmo:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{deCasteljau}\mathbin{::}[\mskip1.5mu \Conid{NPoint}\mskip1.5mu]\to \Conid{OverTime}\;\Conid{NPoint}{}\<[E]%
+\\
+\>[B]{}\Varid{deCasteljau}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}\Varid{nil}{}\<[E]%
+\\
+\>[B]{}\Varid{deCasteljau}\;[\mskip1.5mu \Varid{p}\mskip1.5mu]\mathrel{=}\underline{\Varid{p}}{}\<[E]%
+\\
+\>[B]{}\Varid{deCasteljau}\;\Varid{l}\mathrel{=}\lambda \Varid{pt}\to (\Varid{calcLine}\;(\Varid{p}\;\Varid{pt})\;(\Varid{q}\;\Varid{pt}))\;\Varid{pt}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{p}\mathrel{=}\Varid{deCasteljau}\;(\Varid{init}\;\Varid{l}){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{q}\mathrel{=}\Varid{deCasteljau}\;(\Varid{tail}\;\Varid{l}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Função auxiliar:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{8}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{15}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{calcLine}\mathbin{::}\Conid{NPoint}\to (\Conid{NPoint}\to \Conid{OverTime}\;\Conid{NPoint}){}\<[E]%
+\\
+\>[B]{}\Varid{calcLine}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}\underline{\Varid{nil}}{}\<[E]%
+\\
+\>[B]{}\Varid{calcLine}\;(\Varid{p}\mathbin{:}\Varid{x})\mathrel{=}\overline{\Varid{g}}\;\Varid{p}\;(\Varid{calcLine}\;\Varid{x})\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{g}\mathbin{::}(\Q ,\Conid{NPoint}\to \Conid{OverTime}\;\Conid{NPoint})\to (\Conid{NPoint}\to \Conid{OverTime}\;\Conid{NPoint}){}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{g}\;(\Varid{d},\Varid{f})\;\Varid{l}\mathrel{=}\mathbf{case}\;\Varid{l}\;\mathbf{of}{}\<[E]%
+\\
+\>[4]{}\hsindent{4}{}\<[8]%
+\>[8]{}[\mskip1.5mu \mskip1.5mu]{}\<[15]%
+\>[15]{}\to \Varid{nil}{}\<[E]%
+\\
+\>[4]{}\hsindent{4}{}\<[8]%
+\>[8]{}(\Varid{x}\mathbin{:}\Varid{xs})\to \lambda \Varid{z}\to \Varid{concat}\mathbin{\$}(\Varid{sequenceA}\;[\mskip1.5mu \Varid{singl}\comp \Varid{linear1d}\;\Varid{d}\;\Varid{x},\Varid{f}\;\Varid{xs}\mskip1.5mu])\;\Varid{z}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+2D:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{bezier2d}\mathbin{::}[\mskip1.5mu \Conid{NPoint}\mskip1.5mu]\to \Conid{OverTime}\;(\Conid{Float},\Conid{Float}){}\<[E]%
+\\
+\>[B]{}\Varid{bezier2d}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}\underline{(\mathrm{0},\mathrm{0})}{}\<[E]%
+\\
+\>[B]{}\Varid{bezier2d}\;\Varid{l}\mathrel{=}\lambda \Varid{z}\to ( from_\Q \times from_\Q )\comp (\lambda [\mskip1.5mu \Varid{x},\Varid{y}\mskip1.5mu]\to (\Varid{x},\Varid{y}))\mathbin{\$}((\Varid{deCasteljau}\;\Varid{l})\;\Varid{z}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Modelo:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{20}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{data}\;\Conid{World}\mathrel{=}\Conid{World}\;\{\mskip1.5mu \Varid{points}\mathbin{::}[\mskip1.5mu \Conid{NPoint}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{20}{}\<[20]%
+\>[20]{},\Varid{time}\mathbin{::}\Conid{Float}{}\<[E]%
+\\
+\>[B]{}\hsindent{20}{}\<[20]%
+\>[20]{}\mskip1.5mu\}{}\<[E]%
+\\
+\>[B]{}\Varid{initW}\mathbin{::}\Conid{World}{}\<[E]%
+\\
+\>[B]{}\Varid{initW}\mathrel{=}\Conid{World}\;[\mskip1.5mu \mskip1.5mu]\;\mathrm{0}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{tick}\mathbin{::}\Conid{Float}\to \Conid{World}\to \Conid{World}{}\<[E]%
+\\
+\>[B]{}\Varid{tick}\;\Varid{dt}\;\Varid{world}\mathrel{=}\Varid{world}\;\{\mskip1.5mu \Varid{time}\mathrel{=}(\Varid{time}\;\Varid{world})\mathbin{+}\Varid{dt}\mskip1.5mu\}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{actions}\mathbin{::}\Conid{Event}\to \Conid{World}\to \Conid{World}{}\<[E]%
+\\
+\>[B]{}\Varid{actions}\;(\Conid{EventKey}\;(\Conid{MouseButton}\;\Conid{LeftButton})\;\Conid{Down}\;\anonymous \;\Varid{p})\;\Varid{world}\mathrel{=}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{world}\;\{\mskip1.5mu \Varid{points}\mathrel{=}(\Varid{points}\;\Varid{world})\plus [\mskip1.5mu (\lambda (\Varid{x},\Varid{y})\to \map \; to_\Q \;[\mskip1.5mu \Varid{x},\Varid{y}\mskip1.5mu])\;\Varid{p}\mskip1.5mu]\mskip1.5mu\}{}\<[E]%
+\\
+\>[B]{}\Varid{actions}\;(\Conid{EventKey}\;(\Conid{SpecialKey}\;\Conid{KeyDelete})\;\Conid{Down}\;\anonymous \;\anonymous )\;\Varid{world}\mathrel{=}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{world}\;\{\mskip1.5mu \Varid{points}\mathrel{=}\Varid{cond}\;(\equiv [\mskip1.5mu \mskip1.5mu])\;\Varid{id}\;\Varid{init}\;(\Varid{points}\;\Varid{world})\mskip1.5mu\}{}\<[E]%
+\\
+\>[B]{}\Varid{actions}\;\anonymous \;\Varid{world}\mathrel{=}\Varid{world}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{scaleTime}\mathbin{::}\Conid{World}\to \Conid{Float}{}\<[E]%
+\\
+\>[B]{}\Varid{scaleTime}\;\Varid{w}\mathrel{=}(\mathrm{1}\mathbin{+}\Varid{cos}\;(\Varid{time}\;\Varid{w}))\mathbin{/}\mathrm{2}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{bezier2dAtTime}\mathbin{::}\Conid{World}\to (\Conid{Float},\Conid{Float}){}\<[E]%
+\\
+\>[B]{}\Varid{bezier2dAtTime}\;\Varid{w}\mathrel{=}(\Varid{bezier2dAt}\;\Varid{w})\;(\Varid{scaleTime}\;\Varid{w}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{bezier2dAt}\mathbin{::}\Conid{World}\to \Conid{OverTime}\;(\Conid{Float},\Conid{Float}){}\<[E]%
+\\
+\>[B]{}\Varid{bezier2dAt}\;\Varid{w}\mathrel{=}\Varid{bezier2d}\;(\Varid{points}\;\Varid{w}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{thicCirc}\mathbin{::}\Conid{Picture}{}\<[E]%
+\\
+\>[B]{}\Varid{thicCirc}\mathrel{=}\Conid{ThickCircle}\;\mathrm{4}\;\mathrm{10}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{ps}\mathbin{::}[\mskip1.5mu \Conid{Float}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{ps}\mathrel{=}\map \; from_\Q \;\Varid{ps'}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{ps'}\mathbin{::}[\mskip1.5mu \Q \mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{ps'}\mathrel{=}[\mskip1.5mu \mathrm{0},\mathrm{0.01}\mathinner{\ldotp\ldotp}\mathrm{1}\mskip1.5mu]\mbox{\onelinecomment  interval}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Gloss:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{picture}\mathbin{::}\Conid{World}\to \Conid{Picture}{}\<[E]%
+\\
+\>[B]{}\Varid{picture}\;\Varid{world}\mathrel{=}\Conid{Pictures}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}[\mskip1.5mu \Varid{animateBezier}\;(\Varid{scaleTime}\;\Varid{world})\;(\Varid{points}\;\Varid{world}){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{},\Conid{Color}\;\Varid{white}\comp \Conid{Line}\comp \map \;(\Varid{bezier2dAt}\;\Varid{world})\mathbin{\$}\Varid{ps}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{},\Conid{Color}\;\Varid{blue}\comp \Conid{Pictures}\mathbin{\$}[\mskip1.5mu \Conid{Translate}\;( from_\Q \;\Varid{x})\;( from_\Q \;\Varid{y})\;\Varid{thicCirc}\mid [\mskip1.5mu \Varid{x},\Varid{y}\mskip1.5mu]\leftarrow \Varid{points}\;\Varid{world}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{},\Conid{Color}\;\Varid{green}\mathbin{\$}\Conid{Translate}\;\Varid{cx}\;\Varid{cy}\;\Varid{thicCirc}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\mskip1.5mu]\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}(\Varid{cx},\Varid{cy})\mathrel{=}\Varid{bezier2dAtTime}\;\Varid{world}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Animação:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{animateBezier}\mathbin{::}\Conid{Float}\to [\mskip1.5mu \Conid{NPoint}\mskip1.5mu]\to \Conid{Picture}{}\<[E]%
+\\
+\>[B]{}\Varid{animateBezier}\;\anonymous \;[\mskip1.5mu \mskip1.5mu]\mathrel{=}\Conid{Blank}{}\<[E]%
+\\
+\>[B]{}\Varid{animateBezier}\;\anonymous \;[\mskip1.5mu \anonymous \mskip1.5mu]\mathrel{=}\Conid{Blank}{}\<[E]%
+\\
+\>[B]{}\Varid{animateBezier}\;\Varid{t}\;\Varid{l}\mathrel{=}\Conid{Pictures}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}[\mskip1.5mu \Varid{animateBezier}\;\Varid{t}\;(\Varid{init}\;\Varid{l}){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{},\Varid{animateBezier}\;\Varid{t}\;(\Varid{tail}\;\Varid{l}){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{},\Conid{Color}\;\Varid{red}\comp \Conid{Line}\mathbin{\$}[\mskip1.5mu \Varid{a},\Varid{b}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{},\Conid{Color}\;\Varid{orange}\mathbin{\$}\Conid{Translate}\;\Varid{ax}\;\Varid{ay}\;\Varid{thicCirc}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{},\Conid{Color}\;\Varid{orange}\mathbin{\$}\Conid{Translate}\;\Varid{bx}\;\Varid{by}\;\Varid{thicCirc}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\mskip1.5mu]\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{a}\mathord{@}(\Varid{ax},\Varid{ay})\mathrel{=}\Varid{bezier2d}\;(\Varid{init}\;\Varid{l})\;\Varid{t}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{b}\mathord{@}(\Varid{bx},\Varid{by})\mathrel{=}\Varid{bezier2d}\;(\Varid{tail}\;\Varid{l})\;\Varid{t}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Propriedades e \emph{main}:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{53}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{runBezier}\mathbin{::}\fun{IO}\;(){}\<[E]%
+\\
+\>[B]{}\Varid{runBezier}\mathrel{=}\Varid{play}\;(\Conid{InWindow}\;\text{\ttfamily \char34 Bézier\char34}\;(\mathrm{600},\mathrm{600})\;(\mathrm{0},{}\<[53]%
+\>[53]{}\mathrm{0})){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{black}\;\mathrm{50}\;\Varid{initW}\;\Varid{picture}\;\Varid{actions}\;\Varid{tick}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{runBezierSym}\mathbin{::}\fun{IO}\;(){}\<[E]%
+\\
+\>[B]{}\Varid{runBezierSym}\mathrel{=}\Varid{quickCheckWith}\;(\Varid{stdArgs}\;\{\mskip1.5mu \Varid{maxSize}\mathrel{=}\mathrm{20},\Varid{maxSuccess}\mathrel{=}\mathrm{200}\mskip1.5mu\})\;\Varid{prop\char95 bezier\char95 sym}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+Compilação e execução dentro do interpretador:\footnote{Pode ser útil em testes
+envolvendo \gloss{Gloss}. Nesse caso, o teste em causa deve fazer parte de uma função
+\ensuremath{\Varid{main}}.}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{main}\mathrel{=}\Varid{runBezier}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{run}\mathrel{=}\mathbf{do}\;\{\mskip1.5mu \Varid{system}\;\text{\ttfamily \char34 ghc~cp2021t\char34};\Varid{system}\;\text{\ttfamily \char34 ./cp2021t\char34}\mskip1.5mu\}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection*{QuickCheck}
+Código para geração de testes:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{instance}\;\Conid{Arbitrary}\;\Conid{UnOp}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{arbitrary}\mathrel{=}\Varid{elements}\;[\mskip1.5mu \Conid{Negate},\Conid{E}\mskip1.5mu]{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{instance}\;\Conid{Arbitrary}\;\Conid{BinOp}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{arbitrary}\mathrel{=}\Varid{elements}\;[\mskip1.5mu \Conid{Sum},\Conid{Product}\mskip1.5mu]{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{instance}\;(\Conid{Arbitrary}\;\Varid{a})\Rightarrow \Conid{Arbitrary}\;(\Conid{ExpAr}\;\Varid{a})\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{arbitrary}\mathrel{=}\mathbf{do}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Varid{binop}\leftarrow \Varid{arbitrary}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Varid{unop}{}\<[11]%
+\>[11]{}\leftarrow \Varid{arbitrary}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Varid{exp1}{}\<[11]%
+\>[11]{}\leftarrow \Varid{arbitrary}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Varid{exp2}{}\<[11]%
+\>[11]{}\leftarrow \Varid{arbitrary}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Varid{a}{}\<[11]%
+\>[11]{}\leftarrow \Varid{arbitrary}{}\<[E]%
+\\[\blanklineskip]%
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Varid{frequency}\comp \map \;(\Varid{id}\times\Varid{pure})\mathbin{\$}[\mskip1.5mu (\mathrm{20},\Conid{X}),(\mathrm{15},\Conid{N}\;\Varid{a}),(\mathrm{35},\Conid{Bin}\;\Varid{binop}\;\Varid{exp1}\;\Varid{exp2}),(\mathrm{30},\Conid{Un}\;\Varid{unop}\;\Varid{exp1})\mskip1.5mu]{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{infixr}\;\mathrm{5}\mathbin{\stackrel{\mathrm{?}}{=}}{}\<[E]%
+\\
+\>[B]{}(\mathbin{\stackrel{\mathrm{?}}{=}})\mathbin{::}\Conid{Real}\;\Varid{a}\Rightarrow \Varid{a}\to \Varid{a}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}(\mathbin{\stackrel{\mathrm{?}}{=}})\;\Varid{x}\;\Varid{y}\mathrel{=}( to_\Q \;\Varid{x})\equiv ( to_\Q \;\Varid{y}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection*{Outras funções auxiliares}
+%----------------- Outras definições auxiliares -------------------------------------------%
+Lógicas:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{infixr}\;\mathrm{0}\Rightarrow{}\<[E]%
+\\
+\>[B]{}(\Rightarrow)\mathbin{::}(\Conid{Testable}\;\Varid{prop})\Rightarrow (\Varid{a}\to \Conid{Bool})\to (\Varid{a}\to \Varid{prop})\to \Varid{a}\to \Conid{Property}{}\<[E]%
+\\
+\>[B]{}\Varid{p}\Rightarrow\Varid{f}\mathrel{=}\lambda \Varid{a}\to \Varid{p}\;\Varid{a}\Rightarrow\Varid{f}\;\Varid{a}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{infixr}\;\mathrm{0}\Leftrightarrow{}\<[E]%
+\\
+\>[B]{}(\Leftrightarrow)\mathbin{::}(\Varid{a}\to \Conid{Bool})\to (\Varid{a}\to \Conid{Bool})\to \Varid{a}\to \Conid{Property}{}\<[E]%
+\\
+\>[B]{}\Varid{p}\Leftrightarrow\Varid{f}\mathrel{=}\lambda \Varid{a}\to (\Varid{p}\;\Varid{a}\Rightarrow\Varid{property}\;(\Varid{f}\;\Varid{a}))\mathbin{.\&\&.}(\Varid{f}\;\Varid{a}\Rightarrow\Varid{property}\;(\Varid{p}\;\Varid{a})){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{infixr}\;\mathrm{4}\equiv{}\<[E]%
+\\
+\>[B]{}(\equiv)\mathbin{::}\Conid{Eq}\;\Varid{b}\Rightarrow (\Varid{a}\to \Varid{b})\to (\Varid{a}\to \Varid{b})\to (\Varid{a}\to \Conid{Bool}){}\<[E]%
+\\
+\>[B]{}\Varid{f}\equiv\Varid{g}\mathrel{=}\lambda \Varid{a}\to \Varid{f}\;\Varid{a}\equiv \Varid{g}\;\Varid{a}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{infixr}\;\mathrm{4}\leq{}\<[E]%
+\\
+\>[B]{}(\leq)\mathbin{::}\Conid{Ord}\;\Varid{b}\Rightarrow (\Varid{a}\to \Varid{b})\to (\Varid{a}\to \Varid{b})\to (\Varid{a}\to \Conid{Bool}){}\<[E]%
+\\
+\>[B]{}\Varid{f}\leq\Varid{g}\mathrel{=}\lambda \Varid{a}\to \Varid{f}\;\Varid{a}\leq \Varid{g}\;\Varid{a}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{infixr}\;\mathrm{4}\wedge{}\<[E]%
+\\
+\>[B]{}(\wedge)\mathbin{::}(\Varid{a}\to \Conid{Bool})\to (\Varid{a}\to \Conid{Bool})\to (\Varid{a}\to \Conid{Bool}){}\<[E]%
+\\
+\>[B]{}\Varid{f}\wedge\Varid{g}\mathrel{=}\lambda \Varid{a}\to ((\Varid{f}\;\Varid{a})\mathrel{\wedge}(\Varid{g}\;\Varid{a})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+%----------------- Soluções dos alunos -----------------------------------------%
+
+\section{Soluções dos alunos}\label{sec:resolucao}
+Os alunos devem colocar neste anexo as suas soluções para os exercícios
+propostos, de acordo com o "layout" que se fornece. Não podem ser
+alterados os nomes ou tipos das funções dadas, mas pode ser adicionado
+texto, disgramas e/ou outras funções auxiliares que sejam necessárias.
+
+Valoriza-se a escrita de \emph{pouco} código que corresponda a soluções
+simples e elegantes. 
+
+\subsection*{Problema 1} \label{pg:P1}
+São dadas:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\cata{\Varid{g}}\mathrel{=}\Varid{g}\comp \Varid{recExpAr}\;\cata{\Varid{g}}\comp \Varid{outExpAr}{}\<[E]%
+\\
+\>[B]{}\Varid{anaExpAr}\;\Varid{g}\mathrel{=}\mathsf{in}\comp \Varid{recExpAr}\;(\Varid{anaExpAr}\;\Varid{g})\comp \Varid{g}{}\<[E]%
+\\
+\>[B]{}\Varid{hyloExpAr}\;\Varid{h}\;\Varid{g}\mathrel{=}\cata{\Varid{h}}\comp \Varid{anaExpAr}\;\Varid{g}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{eval\char95 exp}\mathbin{::}\Conid{Floating}\;\Varid{a}\Rightarrow \Varid{a}\to (\Conid{ExpAr}\;\Varid{a})\to \Varid{a}{}\<[E]%
+\\
+\>[B]{}\Varid{eval\char95 exp}\;\Varid{a}\mathrel{=}\cata{\Varid{g\char95 eval\char95 exp}\;\Varid{a}}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{optmize\char95 eval}\mathbin{::}(\Conid{Floating}\;\Varid{a},\Conid{Eq}\;\Varid{a})\Rightarrow \Varid{a}\to (\Conid{ExpAr}\;\Varid{a})\to \Varid{a}{}\<[E]%
+\\
+\>[B]{}\Varid{optmize\char95 eval}\;\Varid{a}\mathrel{=}\Varid{hyloExpAr}\;(\Varid{gopt}\;\Varid{a})\;\Varid{clean}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{sd}\mathbin{::}\Conid{Floating}\;\Varid{a}\Rightarrow \Conid{ExpAr}\;\Varid{a}\to \Conid{ExpAr}\;\Varid{a}{}\<[E]%
+\\
+\>[B]{}\Varid{sd}\mathrel{=}\p2\comp \cata{\Varid{sd\char95 gen}}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{ad}\mathbin{::}\Conid{Floating}\;\Varid{a}\Rightarrow \Varid{a}\to \Conid{ExpAr}\;\Varid{a}\to \Varid{a}{}\<[E]%
+\\
+\>[B]{}\Varid{ad}\;\Varid{v}\mathrel{=}\p2\comp \cata{\Varid{ad\char95 gen}\;\Varid{v}}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\subsection{Solução: }
+Uma vez que estamos a trabalhar com um tipo indutivo novo iremos representar o diagrama genérico de um catamorfismo que atua sobre o tipo indutivo ExprAr. Além disso, iremos representar o bifunctor de base bem como a função out associada a este tipo indutivo.
+
+Pela análise da função \ensuremath{\Varid{baseExprAr}} conseguimos perceber de um modo geral como o bifunctor de base atua. 
+Assim temos o seguinte diagrama:
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\Conid{ExpAr}\;\Conid{A}}
+           \ar[d]_-{\ensuremath{\cata{\Varid{f}}}}
+&
+    \ensuremath{\mathrm{1}\mathbin{+}\Conid{A}\mathbin{+}(\Conid{BinOp}\times(\Conid{ExpAr}\;\Conid{A}\times\Conid{ExpAr}\;\Conid{A}))\mathbin{+}(\Conid{UnOp}\times\Conid{ExpAr}\;\Conid{A})}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}\Varid{id}\mathbin{+}(\Varid{id}\times\cata{\Varid{f}}\mathbin{+}\cata{\Varid{f}})\mathbin{+}(\Varid{id}\times\cata{\Varid{f}})}}
+           \ar[l]_-{\ensuremath{\mathsf{in}}}
+\\
+     \ensuremath{\Conid{A}}
+&
+     \ensuremath{\mathrm{1}\mathbin{+}\Conid{A}\mathbin{+}(\Conid{BinOp}\times(\Conid{A}\times\Conid{A}))\mathbin{+}(\Conid{UnOp}\times\Conid{A})}
+           \ar[l]^-{\ensuremath{\Varid{gene}}}
+}
+\end{eqnarray*}
+
+Como em qualquer catamorfismo, está presente o isomorfismo in- out e pelas leis de Cálculo de Programas, conseguimos obter a definição da função outExpAr.
+
+\textbf{NB}: Por efeitos de simplificação, iremos referir a função \ensuremath{\Varid{outExpAr}} como apenas \ensuremath{\Varid{out}}.
+
+Temos:
+
+\begin{eqnarray*}
+\start
+  \ensuremath{\Varid{out}\comp \mathsf{in}\mathrel{=}\Varid{id}}
+%
+\just\equiv{ Definição de \ensuremath{\mathsf{in}} }
+%
+\ensuremath{\Varid{out}\comp \alt{\underline{\Conid{X}}}{\Varid{num\char95 ops}}\mathrel{=}\Varid{id}}
+%
+\just\equiv{ Definição de \ensuremath{\Varid{num\char95 ops}} }
+%
+\ensuremath{\Varid{out}\comp \alt{\underline{\Conid{X}}}{\alt{\Conid{N}}{\Varid{ops}}}}
+%
+\just\equiv{ Definição de \ensuremath{\Varid{ops}} }
+%
+\ensuremath{\Varid{out}\comp \alt{\underline{\Conid{X}}}{\alt{\Conid{N}}{\alt{\Varid{bin}}{\uncurry{\Conid{Un}}}}}}
+%
+\just\equiv{ Fusão + (20) }
+%
+\ensuremath{\alt{\Varid{out}\comp \underline{\Conid{X}}}{\alt{\Varid{out}\comp \Conid{N}}{\alt{\Varid{out}\comp \Varid{bin}}{\Varid{out}\comp \uncurry{\Conid{Un}}}}}\mathrel{=}\Varid{id}}
+%
+\just\equiv{ Universal + (17), Natural id (1) }
+%
+      \begin{lcbr}
+          \ensuremath{\Varid{out}\comp \underline{\Conid{X}}\mathrel{=}i_1\;()}\\
+          \ensuremath{\alt{\Varid{out}\comp \Conid{N}}{\alt{\Varid{out}\comp \Varid{bin}}{\Varid{out}\comp \uncurry{\Conid{Un}}}}\mathrel{=}i_2\;()}\\
+      \end{lcbr}
+%
+\just\equiv{ Universal + (17) }
+  %
+      \begin{lcbr}
+          \ensuremath{\Varid{out}\comp \underline{\Conid{X}}\mathrel{=}i_1\;()}\\
+          \begin{lcbr}
+              \ensuremath{\Varid{out}\comp \Conid{N}\mathrel{=}i_2\;()\comp i_1\;()}\\
+              \ensuremath{\alt{\Varid{out}\comp \Varid{bin}}{\Varid{out}\comp \uncurry{\Conid{Un}}\mathrel{=}i_2\;()\comp i_2\;()}}\\
+          \end{lcbr}
+      \end{lcbr}
+  %
+\just\equiv{ Universal + (17) }
+  %
+      \begin{lcbr}
+          \ensuremath{\Varid{out}\comp \underline{\Conid{X}}\mathrel{=}i_1\;()}\\
+          \begin{lcbr}
+              \ensuremath{\Varid{out}\comp \Conid{N}\mathrel{=}i_2\;()\comp i_1\;()}\\
+              \begin{lcbr}
+                \ensuremath{\Varid{out}\comp \Varid{bin}\mathrel{=}i_2\;()\comp i_2\;()\comp i_1\;()}\\
+                \ensuremath{\Varid{out}\comp \uncurry{\Conid{Un}}\mathrel{=}i_2\;()\comp i_2\;()\comp i_2\;()}\\
+              \end{lcbr}
+          \end{lcbr}
+      \end{lcbr}
+  %
+\just\equiv{ Ig Existencial (71), Def de Composição (72), Def de Const (74), Def de Uncurry (84), Def de \ensuremath{\Conid{Un}}, Def \ensuremath{\Conid{Bin}}}
+  %
+      \begin{lcbr}
+          \ensuremath{\Varid{out}\;(\Conid{X})\mathrel{=}i_1\;()}\\
+          \begin{lcbr}
+              \ensuremath{\Varid{out}\;(\Conid{N}\;\Varid{x})\mathrel{=}i_2\;(i_1\;(\Varid{x}))}\\
+              \begin{lcbr}
+                \ensuremath{\Varid{out}\;(\Conid{Bin}\;\Varid{op}\;\Varid{a}\;\Varid{b})\mathrel{=}i_2\;(i_2\;(i_1\;(\Varid{op},(\Varid{a},\Varid{b}))))}\\
+                \ensuremath{\Varid{out}\;(\Conid{Un}\;\Varid{op}\;\Varid{a})\mathrel{=}i_2\;(i_2\;(i_2\;(\Varid{op},\Varid{a})))}\\
+              \end{lcbr}
+          \end{lcbr}
+      \end{lcbr}
+  %  
+\qed
+\end{eqnarray*}
+
+
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{outExpAr}\;(\Conid{X})\mathrel{=}i_1\;(){}\<[E]%
+\\
+\>[B]{}\Varid{outExpAr}\;(\Conid{N}\;\Varid{x})\mathrel{=}i_2\;(i_1\;\Varid{x}){}\<[E]%
+\\
+\>[B]{}\Varid{outExpAr}\;(\Conid{Bin}\;\Varid{op}\;\Varid{a}\;\Varid{b})\mathrel{=}i_2\;(i_2\;(i_1\;(\Varid{op},(\Varid{a},\Varid{b})))){}\<[E]%
+\\
+\>[B]{}\Varid{outExpAr}\;(\Conid{Un}\;\Varid{op}\;\Varid{a})\mathrel{=}i_2\;(i_2\;(i_2\;(\Varid{op},\Varid{a}))){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\subsection{Solução: }
+Pela análise do diagrama, percebemos como a recursividade, isto é, como um catamorfismo associado a este tipo indutivo "consome" a estrutura de dados. Temos também o functor do tipo indutivo dado pela função \ensuremath{\Varid{baseExpAr}}.
+
+Assim conseguimos chegar de forma indutiva à definição da função recExpAr:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{recExpAr}\;\Varid{f}\mathrel{=}\Varid{baseExpAr}\;\Varid{id}\;\Varid{id}\;\Varid{id}\;\Varid{f}\;\Varid{f}\;\Varid{id}\;\Varid{f}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\subsection{Solução: }
+Dada a situação em que nos é dado um escalar e uma expressão, ao termos de calcular o valor da mesma, substituindo o valor do escalar de forma apropriada à expressão, conseguimos mais uma vez através da análise do diagrama perceber como a recursividade está explícita neste caso.
+Primeiramente iremos definir o diagrama associado ao catamorfismo \ensuremath{\Varid{eval\char95 exp}}:
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\Conid{ExpAr}\;\Conid{A}}
+           \ar[d]_-{\ensuremath{\Varid{eval\char95 exp}}}
+&
+    \ensuremath{\mathrm{1}\mathbin{+}\Conid{A}\mathbin{+}(\Conid{BinOp}\times(\Conid{ExpAr}\;\Conid{A}\times\Conid{ExpAr}\;\Conid{A}))\mathbin{+}(\Conid{UnOp}\times\Conid{ExpAr}\;\Conid{A})}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}\Varid{id}\mathbin{+}(\Varid{id}\times(\Varid{eval\char95 exp})\mathbin{+}(\Varid{eval\char95 exp}))\mathbin{+}(\Varid{id}\times(\Varid{eval\char95 exp}))}}
+           \ar[l]_-{\ensuremath{\mathsf{in}}}
+\\
+     \ensuremath{\Conid{A}}
+&
+     \ensuremath{\mathrm{1}\mathbin{+}\Conid{A}\mathbin{+}(\Conid{BinOp}\times(\Conid{A}\times\Conid{A}))\mathbin{+}(\Conid{UnOp}\times\Conid{A})}
+           \ar[l]^-{\ensuremath{\Varid{g\char95 eval\char95 exp}}}
+}
+\end{eqnarray*}
+
+É de salientar que o ponto fulcral do problema é induzir o gene do catamorfismo \ensuremath{\Varid{eval\char95 exp}}, ou seja "descobrir" como definir a função \ensuremath{\Varid{g\char95 eval\char95 exp}}.
+Ora consoante o tipo de \ensuremath{\Conid{ExpAr}} em  causa e um escalar, de forma a calcular o valor da expressão para esse escalar, temos uma das seguintes possibilidades ou até mesmo várias das seguintes possibilidades:
+
+\begin{itemize}
+  \item Caso 1: Uma expressão ser uma incógnita \ensuremath{\Varid{x}} e dado um escalar, o valor da expressão é o próprio escalar;
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{g\char95 eval\char95 exp}\;\Varid{escalar}\;(i_1\;())\mathrel{=}\Varid{escalar}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 2: Uma expressão ser um escalar \ensuremath{\Varid{valor}} e dado um escalar, o valor da expressão é o próprio \ensuremath{\Varid{valor}};
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{g\char95 eval\char95 exp}\;\Varid{escalar}\;(i_2\;(i_1\;\Varid{valor}))\mathrel{=}\Varid{valor}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 3: Uma expressão ser uma soma/produto entre dois \ensuremath{\Conid{ExpAr}} e dado um escalar, o valor da expressão é somar/multiplicar os dois \ensuremath{\Conid{ExpAr}}, substituindo as incógnitas pelo escalar;
+\end{itemize}
+\textbf{NB}: É de salientar que ambos os \ensuremath{\Conid{ExpAr}} supramencionados foram já processados pelo catamorfismo e as incógnitas substituidas pelo valor do escalar, na recursividade quando esta chega aos casos de base (caso 1 e caso 2).
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{g\char95 eval\char95 exp}\;\Varid{escalar}\;(i_2\;(i_2\;(i_1\;(\Conid{Sum},(\Varid{a},\Varid{b})))))\mathrel{=}\Varid{a}\mathbin{+}\Varid{b}{}\<[E]%
+\\
+\>[B]{}\Varid{g\char95 eval\char95 exp}\;\Varid{escalar}\;(i_2\;(i_2\;(i_1\;(\Conid{Product},(\Varid{a},\Varid{b})))))\mathrel{=}\Varid{a}\mathbin{*}\Varid{b}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 4: Uma expressão ser uma negação de um \ensuremath{\Conid{ExpAr}} e dado um escalar, o valor da expressão é negar o \ensuremath{\Conid{ExpAr}}, substituindo as incógnitas pelo escalar;
+\end{itemize}
+\textbf{NB}: É de salientar que o \ensuremath{\Conid{ExpAr}} supramencionado foi já processado pelo catamorfismo e as incógnitas substituidas pelo valor do escalar, na recursividade quando esta chega aos casos de base (caso 1 e caso 2).
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{g\char95 eval\char95 exp}\;\Varid{escalar}\;(i_2\;(i_2\;(i_2\;(\Conid{Negate},\Varid{a}))))\mathrel{=}(\mathbin{-}\mathrm{1})\mathbin{*}\Varid{a}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 5: Uma expressão ser uma base de \ensuremath{\Varid{e}} cujo expoente é um \ensuremath{\Conid{ExpAr}} e dado um escalar, o valor da expressão é elevar a base \ensuremath{\Varid{e}} ao expoente \ensuremath{\Conid{ExpAr}}, substituindo as incógnitas pelo escalar;
+\end{itemize}
+\textbf{NB}: É de salientar que o \ensuremath{\Conid{ExpAr}} supramencionado foi já processado pelo catamorfismo e as incógnitas substituidas pelo valor do escalar, na recursividade quando esta chega aos casos de base (caso 1 e caso 2).
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{g\char95 eval\char95 exp}\;\Varid{escalar}\;(i_2\;(i_2\;(i_2\;(\Conid{E},\Varid{a}))))\mathrel{=}\Varid{\Conid{Prelude}.exp}\;\Varid{a}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection{Solução: }
+De forma a tirar proveito das propriedades dos elementos absorventes e neutros das operações matemáticas impostas no tipo indutivo em causa, teremos de analisar os vários casos em que conseguimos "limpar" uma expressão. Além disso, a maneira que iremos trabalhar com estes casos é a mesma para a função \ensuremath{\Varid{outExpAr}} associada a este tipo indutivo, uma vez que iremos apenas receber uma \ensuremath{\Conid{ExpAr}} e a iremos "limpar".
+Assim, consoante o tipo \ensuremath{\Conid{ExpAr}} em causa, de forma a tirar proveito das propriedades dos elementos neutro e absorventes temos uma das seguintes possibilidades ou até mesmo várias das seguintes possibilidades:
+\begin{itemize}
+  \item Caso 1: Uma expressão ser um produto de uma \ensuremath{\Conid{ExpAr}} com 0 é o mesmo que apenas ter 0, tirando proveito da propriedade do elemento absorvente da multiplicação;
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{clean}\;(\Conid{Bin}\;\Conid{Product}\;\Varid{a}\;(\Conid{N}\;\mathrm{0}))\mathrel{=}\Varid{outExpAr}\;(\Conid{N}\;\mathrm{0}){}\<[E]%
+\\
+\>[B]{}\Varid{clean}\;(\Conid{Bin}\;\Conid{Product}\;(\Conid{N}\;\mathrm{0})\;\Varid{a})\mathrel{=}\Varid{outExpAr}\;(\Conid{N}\;\mathrm{0}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 2: Uma expressão ser a base de \ensuremath{\Varid{e}} cujo expoente é 0 é o mesmo que apenas ter 1, tirando proveito da propriedade do elemento absorvente da exponeciação;
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{clean}\;(\Conid{Un}\;\Conid{E}\;(\Conid{N}\;\mathrm{0}))\mathrel{=}\Varid{outExpAr}\;(\Conid{N}\;\mathrm{1}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 3: Uma expressão ser a negação de 0 é o mesmo que apenas ter 0, tirando proveito da propriedade do elemento neutro da negação;
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{clean}\;(\Conid{Un}\;\Conid{Negate}\;(\Conid{N}\;\mathrm{0}))\mathrel{=}\Varid{outExpAr}\;(\Conid{N}\;\mathrm{0}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 4: Uma expressão que à partida não tira proveito de nenhuma das propriedades supramencionadas, terá de ser analisada nas suas partes, sendo esta análise já efetuada aquando da recursividade;
+\end{itemize}
+\emph{Caso 5}: Uma expressão que à partida não tira proveito de nenhuma das propriedades supramencionadas, terá de ser analisada nas suas partes, sendo esta análise já efetuada aquando da recursividade;
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{clean}\;\Varid{x}\mathrel{=}\Varid{outExpAr}\;\Varid{x}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+A função gopt "consome", isto é, calcula apenas a expressão, fazendo uso da função \ensuremath{\Varid{g\char95 eval\char95 exp}} acima definida.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{gopt}\;\Varid{exp}\mathrel{=}\Varid{g\char95 eval\char95 exp}\;\Varid{exp}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Ora é de ressalvar, que pela a análise da definição do hilomorfismo associado a este tipo indutivo, \ensuremath{\Varid{hyloExpAr}}, vemos que a função que "constroi" a estrutura de dados, que desempenha o papel de anamorfismo, é a função \ensuremath{\Varid{clean}} e a função que consome esta estrutura intermédia criada pela função \ensuremath{\Varid{clean}} é a função \ensuremath{\Varid{gopt}} que desempenha o papel de catamorfismo.
+
+\subsection{Solução: }
+Uma vez que queremos calcular a derivada de uma expressão, teremos de ter em conta os vários casos possíveis e que se adequam ao tipo indutivo em causa e que estão presentes na matemática que aprendemos no ensino básico. Além disso, pelas regras que nos são apresentadas como ponto de partida, conseguimos perceber que iremos lidar com um catamorfismo, que terá casos de base e casos recursivos, sendo que estes últimos já serão processados pelo próprio catamorfismo \ensuremath{\Varid{sd}}. 
+Primeiramente iremos analisar a tipagem da função \ensuremath{\Varid{sd\char95 gen}} que irá tratar do cálculo da derivada de uma expressão do tipo \ensuremath{\Conid{ExpAr}}.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{sd\char95 gen}\mathbin{::}\Conid{Floating}\;\Varid{a}\Rightarrow {}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}()+(\Varid{a}+((\Conid{BinOp},((\Conid{ExpAr}\;\Varid{a},\Conid{ExpAr}\;\Varid{a}),(\Conid{ExpAr}\;\Varid{a},\Conid{ExpAr}\;\Varid{a})))+(\Conid{UnOp},(\Conid{ExpAr}\;\Varid{a},\Conid{ExpAr}\;\Varid{a}))))\to (\Conid{ExpAr}\;\Varid{a},\Conid{ExpAr}\;\Varid{a}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Ao analisar a tipagem da função \ensuremath{\Varid{sd\char95 gen}} ficamos com uma dúvida: "O que são os pares de \ensuremath{\Conid{ExpAr}} nos operadores \ensuremath{\Conid{Bin}} e \ensuremath{\Conid{Un}}?".
+
+Sabemos que estamos perante um gene de catamorfismo e que teremos casos em que, dado o operador em causa, temos argumentos por processar, isto é, por calcular a sua derivada. Pela tipagem percebemos que o catamorfismo em causa pede os tais dois pares e pela a análise das regras de derivação, percebemos que a primeira componente de cada par é a expressão que ainda não foi derivada e a segunda componente é a expressão que já foi derivada.
+Assim, consoante o tipo \ensuremath{\Conid{ExpAr}} em causa, seguindo as regras de derivação temos uma das seguintes possibilidades ou até mesmo várias das seguintes possibilidades:
+
+\begin{itemize}
+  \item Caso 1: Regra da derivada de uma incógnita:
+\begin{eqnarray*}
+  \frac{d}{dx}(x)= 1
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{sd\char95 gen}\;(i_1\;())\mathrel{=}(\Conid{X},\Conid{N}\;\mathrm{1}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 2: Regra da derivada de uma constante:
+\begin{eqnarray*}
+  \frac{d}{dx}(n)= 0
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{sd\char95 gen}\;(i_2\;(i_1\;\Varid{a}))\mathrel{=}(\Conid{N}\;\Varid{a},\Conid{N}\;\mathrm{0}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 3: Regra da derivada de uma soma:
+\begin{eqnarray*}
+  \frac{d}{dx}(f(x)+g(x))=\frac{d}{dx}(f(x))+\frac{d}{dx}(g(x))
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{sd\char95 gen}\;(i_2\;(i_2\;(i_1\;(\Conid{Sum},((\Varid{a},\Varid{b}),(\Varid{c},\Varid{d}))))))\mathrel{=}(\Conid{Bin}\;\Conid{Sum}\;\Varid{a}\;\Varid{c},\Conid{Bin}\;\Conid{Sum}\;\Varid{b}\;\Varid{d}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 4: Regra da derivada de uma produto:
+\begin{eqnarray*}
+  \frac{d}{dx}(f(x)g(x))=f(x)\cdot \frac{d}{dx}(g(x))+\frac{d}{dx}(f(x))\cdot g(x)
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{sd\char95 gen}\;(i_2\;(i_2\;(i_1\;(\Conid{Product},((\Varid{a},\Varid{b}),(\Varid{c},\Varid{d}))))))\mathrel{=}(\Conid{Bin}\;\Conid{Product}\;\Varid{a}\;\Varid{c},(\Conid{Bin}\;\Conid{Sum}\;(\Conid{Bin}\;\Conid{Product}\;\Varid{a}\;\Varid{d})\;(\Conid{Bin}\;\Conid{Product}\;\Varid{b}\;\Varid{c}))){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 5: Regra da derivada de uma negação:
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{sd\char95 gen}\;(i_2\;(i_2\;(i_2\;(\Conid{Negate},(\Varid{a},\Varid{b})))))\mathrel{=}(\Conid{Un}\;\Conid{Negate}\;\Varid{a},\Conid{Un}\;\Conid{Negate}\;\Varid{b}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 6: Regra da derivada de uma expressão cuja base é \ensuremath{\Varid{e}}:
+\begin{eqnarray*}
+  \frac{d}{dx}{e^a}= {e^a}\cdot \frac{d}{dx}(a)
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{sd\char95 gen}\;(i_2\;(i_2\;(i_2\;(\Conid{E},(\Varid{a},\Varid{b})))))\mathrel{=}(\Conid{Un}\;\Conid{E}\;\Varid{a},\Conid{Bin}\;\Conid{Product}\;(\Conid{Un}\;\Conid{E}\;\Varid{a})\;\Varid{b}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection{Solução: }
+Sabemos que estamos perante um gene de catamorfismo e que teremos casos em que, dado o operador em causa, temos argumentos por processar, isto é, por calcular a sua derivada. Além disso, agora é nos dados um escalar de forma a calcularmos a derivada no ponto (escalar) dado, sem manipular ou transformar a expressão em causa. Assim, consoante o tipo \ensuremath{\Conid{ExpAr}} em causa, seguindo as regras de derivação temos uma das seguintes possibilidades ou até mesmo várias das seguintes possibilidades: 
+\begin{itemize}
+  \item Caso 1: Regra da derivada de uma incógnita:
+\begin{eqnarray*}
+  \frac{d}{dx}(x)= 1
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ad\char95 gen}\;\Varid{x}\;(i_1\;())\mathrel{=}(\Varid{x},\mathrm{1}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 2: Regra da derivada de uma constante:
+\begin{eqnarray*}
+  \frac{d}{dx}(n)= 0
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ad\char95 gen}\;\Varid{x}\;(i_2\;(i_1\;\Varid{a}))\mathrel{=}(\Varid{a},\mathrm{0}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 3: Regra da derivada de uma soma:
+\begin{eqnarray*}
+  \frac{d}{dx}(f(x)+g(x))=\frac{d}{dx}(f(x))+\frac{d}{dx}(g(x))
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ad\char95 gen}\;\Varid{x}\;(i_2\;(i_2\;(i_1\;(\Conid{Sum},((\Varid{a},\Varid{b}),(\Varid{c},\Varid{d}))))))\mathrel{=}(\Varid{a}\mathbin{+}\Varid{c},\Varid{b}\mathbin{+}\Varid{d}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 4: Regra da derivada de uma produto:
+\begin{eqnarray*}
+  \frac{d}{dx}(f(x)g(x))=f(x)\cdot \frac{d}{dx}(g(x))+\frac{d}{dx}(f(x))\cdot g(x)
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ad\char95 gen}\;\Varid{x}\;(i_2\;(i_2\;(i_1\;(\Conid{Product},((\Varid{a},\Varid{b}),(\Varid{c},\Varid{d}))))))\mathrel{=}(\Varid{a}\mathbin{*}\Varid{c},(\Varid{a}\mathbin{*}\Varid{d})\mathbin{+}(\Varid{b}\mathbin{*}\Varid{c})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 5: Regra da derivada de uma negação:
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ad\char95 gen}\;\Varid{x}\;(i_2\;(i_2\;(i_2\;(\Conid{Negate},(\Varid{a},\Varid{b})))))\mathrel{=}(\Varid{a}\mathbin{*}(\mathbin{-}\mathrm{1}),\Varid{b}\mathbin{*}(\mathbin{-}\mathrm{1})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\begin{itemize}
+  \item Caso 6: Regra da derivada de uma expressão cuja base é \ensuremath{\Varid{e}}:
+\begin{eqnarray*}
+  \frac{d}{dx}{e^a}= {e^a}\cdot \frac{d}{dx}(a)
+\end{eqnarray*}
+\end{itemize}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ad\char95 gen}\;\Varid{x}\;(i_2\;(i_2\;(i_2\;(\Conid{E},(\Varid{a},\Varid{b})))))\mathrel{=}(\Varid{\Conid{Prelude}.exp}\;\Varid{a},\Varid{b}\mathbin{*}(\Varid{\Conid{Prelude}.exp}\;\Varid{a})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection*{Problema 2}
+\subsection*{Solução:}
+Uma vez que queremos derivar uma implementação da fórmula de Catalan, (função \ensuremath{\Conid{Cn}}) sem fatoriais, teremos de descobrir alguma "propriedade" da mesma. Ora a base desta "propriedade" já nos é que é a recursividade mútua. Assim, teremos de chegar a uma fórmula que expresse recursividade mútua,tendo como ponto de partida a fórmula que dá o n-ésimo número de Catalan:
+\begin{eqnarray*}
+\start
+\ensuremath{\Conid{C}\;\Varid{n}\mathrel{=}(\mathrm{2}\;\Varid{n})\mathbin{!/}((\Varid{n}\mathbin{+}\mathrm{1})\mathbin{!}\times(\Varid{n}\mathbin{!}))}
+%
+\qed
+\end{eqnarray*}
+
+Ao analisarmos a fórmula e ao estarmos a trabalhar nos \ensuremath{\N_0}, conseguimos inferir o caso base e o caso recursivo da fórmula de Catalan.
+Assim, temos o caso base e o caso recursivo abaixo representados respetivamente:
+\begin{eqnarray*}
+\start
+\just\equiv{ Definição do caso base, Definição do caso recursivo (para n + 1)}
+%
+      \begin{lcbr}
+          \ensuremath{\Conid{C}\;\mathrm{0}\mathrel{=}\mathrm{0}\mathbin{!/}(\mathrm{1}\mathbin{!}\times\mathrm{0}\mathbin{!})}\\
+          \ensuremath{\Conid{C}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Conid{Cn}\times(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{2})\mathbin{!/}((\Varid{n}\mathbin{+}\mathrm{2})\mathbin{!}(\Varid{n}\mathbin{+}\mathrm{1})\mathbin{!})}\\
+      \end{lcbr}
+%
+\just\equiv{ Simplificação do caso base, Propriedade do factorial (\ensuremath{\Varid{x}\mathbin{!}\mathrel{=}\Varid{x}\times(\Varid{x}\mathbin{-}\mathrm{1})\mathbin{!}}) }
+%
+      \begin{lcbr}
+          \ensuremath{\Conid{C}\;\mathrm{0}\mathrel{=}\mathrm{1}}\\
+          \ensuremath{\Conid{C}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}((\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{2})\times(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1})\times(\mathrm{2}\;\Varid{n})\mathbin{!})\mathbin{/}((\Varid{n}\mathbin{+}\mathrm{2})\times(\Varid{n}\mathbin{+}\mathrm{1})\times(\Varid{n}\mathbin{!})\times(\Varid{n}\mathbin{+}\mathrm{1})\mathbin{!})}\\
+      \end{lcbr}
+%
+\just\equiv{ Propriedade do factorial (\ensuremath{\Varid{x}\mathbin{!}\mathrel{=}\Varid{x}\times(\Varid{x}\mathbin{-}\mathrm{1})\mathbin{!}}) }
+%
+      \begin{lcbr}
+          \ensuremath{\Conid{C}\;\mathrm{0}\mathrel{=}\mathrm{1}}\\
+          \ensuremath{\Conid{C}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}((\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{2})\times(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1})\times(\mathrm{2}\;\Varid{n})\mathbin{!})\mathbin{/}((\Varid{n}\mathbin{+}\mathrm{2})\times(\Varid{n}\mathbin{+}\mathrm{1})\times\Varid{n}\mathbin{!}\times(\Varid{n}\mathbin{+}\mathrm{1})\mathbin{!})}\\
+      \end{lcbr}
+%
+\just\equiv{ Definição de \ensuremath{\Conid{C}\;\Varid{n}\mathrel{=}(\mathrm{2}\;\Varid{n})\mathbin{!/}((\Varid{n}\mathbin{!})\times(\Varid{n}\mathbin{+}\mathrm{1})\mathbin{!})} }
+%
+      \begin{lcbr}
+          \ensuremath{\Conid{C}\;\mathrm{0}\mathrel{=}\mathrm{1}}\\
+          \ensuremath{\Conid{C}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Conid{Cn}\times((\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{2})\times(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1}))\mathbin{/}((\Varid{n}\mathbin{+}\mathrm{2})\times(\Varid{n}\mathbin{+}\mathrm{1}))}\\
+      \end{lcbr}
+%
+\just\equiv{ Colocar o 2 em evidência }
+%
+      \begin{lcbr}
+          \ensuremath{\Conid{C}\;\mathrm{0}\mathrel{=}\mathrm{1}}\\
+          \ensuremath{\Conid{C}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Conid{Cn}\times(\mathrm{2}\;(\Varid{n}\mathbin{+}\mathrm{1})\times(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1}))\mathbin{/}((\Varid{n}\mathbin{+}\mathrm{2})\times(\Varid{n}\mathbin{+}\mathrm{1}))}\\
+      \end{lcbr}
+%
+\just\equiv{ Cortar o denomidor e numerador \ensuremath{\Varid{n}\mathbin{+}\mathrm{1}} }
+%
+      \begin{lcbr}
+          \ensuremath{\Conid{C}\;\mathrm{0}\mathrel{=}\mathrm{1}}\\
+          \ensuremath{\Conid{C}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Conid{Cn}\times(\mathrm{2}\;(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1}))\mathbin{/}(\Varid{n}\mathbin{+}\mathrm{2})}\\
+      \end{lcbr}
+%
+\just\equiv{ Intrudução das funções \ensuremath{\Varid{f}} e \ensuremath{\Varid{g}} }
+%
+      \begin{lcbr}
+          \ensuremath{\Conid{C}\;\mathrm{0}\mathrel{=}\mathrm{1}}\\
+          \ensuremath{\Conid{C}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Conid{Cn}\times\Varid{f}\;(\Varid{n})\mathbin{/}\Varid{g}\;(\Varid{n})}\\
+      \end{lcbr}
+%
+\qed
+\end{eqnarray*}
+
+\textbf{NB}: Criamos duas funções de forma a simplificar o cálculo, em que a função \ensuremath{\Varid{f}} é o numerador e a função \ensuremath{\Varid{g}} é o denominador.
+Tendo:
+
+\ensuremath{\Varid{f}\;(\Varid{n})\mathrel{=}\mathrm{2}\;(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1})}
+
+\ensuremath{\Varid{g}\;(\Varid{n})\mathrel{=}\Varid{n}\mathbin{+}\mathrm{2}}
+
+Uma vez definidas as funções "auxiliares", conseguimos também definir os casos base das mesma. Tal como referido anteriormente, como estamos nos \ensuremath{\N_0}, conseguimos induzir facilmente os casos base das funções e álém disso, simplificar as mesmas, tendo-se:
+\begin{eqnarray*}
+\start
+\just\equiv{ Definição de \ensuremath{\Varid{f}}, Definição de \ensuremath{\Varid{g}} }
+%
+      \begin{lcbr}
+          \ensuremath{\Varid{f}\;(\Varid{n})\mathrel{=}\mathrm{2}\;(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1})}\\
+          \ensuremath{\Varid{g}\;(\Varid{n})\mathrel{=}\Varid{n}\mathbin{+}\mathrm{2}}\\
+      \end{lcbr}
+%
+\just\equiv{ Definição do caso base e recursivo de \ensuremath{\Varid{f}}, Definição do caso base e recursivo de \ensuremath{\Varid{g}} }
+%
+      \begin{lcbr}
+        \begin{lcbr}
+          \ensuremath{\Varid{f}\;(\mathrm{0})\mathrel{=}\mathrm{2}}\\
+          \ensuremath{\Varid{f}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\mathrm{2}\;(\mathrm{2}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathbin{+}\mathrm{1})}\\
+          \end{lcbr}
+          \begin{lcbr}
+          \ensuremath{\Varid{g}\;(\mathrm{0})\mathrel{=}\mathrm{2}}\\
+          \ensuremath{\Varid{g}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{n}\mathbin{+}\mathrm{2}\mathbin{+}\mathrm{1}}\\
+          \end{lcbr}
+      \end{lcbr}
+%
+\just\equiv{ Simplificação do caso recursivo de \ensuremath{\Varid{f}} }
+%
+      \begin{lcbr}
+        \begin{lcbr}
+          \ensuremath{\Varid{f}\;(\mathrm{0})\mathrel{=}\mathrm{2}}\\
+          \ensuremath{\Varid{f}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\mathrm{2}\;(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1})\mathbin{+}\mathrm{4}}\\
+          \end{lcbr}
+          \begin{lcbr}
+          \ensuremath{\Varid{g}\;(\mathrm{0})\mathrel{=}\mathrm{2}}\\
+          \ensuremath{\Varid{g}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{n}\mathbin{+}\mathrm{2}\mathbin{+}\mathrm{1}}\\
+          \end{lcbr}
+      \end{lcbr}
+%
+\just\equiv{ Definição de \ensuremath{\Varid{f}\;\Varid{n}\mathrel{=}\mathrm{2}\;(\mathrm{2}\;\Varid{n}\mathbin{+}\mathrm{1})}, Definição de \ensuremath{\Varid{g}\;\Varid{n}\mathrel{=}\Varid{n}\mathbin{+}\mathrm{2}} }
+%
+      \begin{lcbr}
+        \begin{lcbr}
+          \ensuremath{\Varid{f}\;(\mathrm{0})\mathrel{=}\mathrm{2}}\\
+          \ensuremath{\Varid{f}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{f}\;(\Varid{n})\mathbin{+}\mathrm{4}}\\
+          \end{lcbr}
+          \begin{lcbr}
+          \ensuremath{\Varid{g}\;(\mathrm{0})\mathrel{=}\mathrm{2}}\\
+          \ensuremath{\Varid{g}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{g}\;(\Varid{n})\mathbin{+}\mathrm{1}}\\
+          \end{lcbr}
+      \end{lcbr}
+%
+\qed
+\end{eqnarray*}
+Após a simplificação da fórmula de Catalan dada, conseguimos chegar a uma expressão que não depende de factoriais. Ao analisar em detalhe, percebemos algo fulcral, que é a existência de recursividade mútua nesta nova expressão.
+
+Estamos prontos para usar a dica que nos foi dado no enunciado, usando a função \ensuremath{\Varid{loop}}. Segundo o enunciado, na primeira etapa "O corpo do ciclo loop terá tantos argumentos quanto o número de funções mutuamente recursivas.", ora as funções mutuamente recursivas serão 3 sendo que 2 delas formarão um par (as funções \ensuremath{\Varid{f}} e \ensuremath{\Varid{g}}). Seguindo a segunda etapa "Para as variáveis escolhem-se os próprios nomes das funções, pela ordem que se achar conveniente", sendo que os argumentos da função \ensuremath{\Varid{loop}} serão as funções mutuamente recursivas \ensuremath{\Varid{f}}, \ensuremath{\Varid{g}} e \ensuremath{\Conid{C}}. Com estas etapas juntamente com a terceira etapa, temos a definição da função \ensuremath{\Varid{loop}}:
+\begin{eqnarray*}
+\start
+\ensuremath{\Varid{loop}\;(\Conid{C},(\Varid{f},\Varid{g}))\mathrel{=}((\Conid{C}\mathbin{*}\Varid{f})\mathbin{/}\Varid{g},(\Varid{f}\mathbin{+}\mathrm{4},\Varid{g}\mathbin{+}\mathrm{1}))}
+\qed
+\end{eqnarray*}
+
+\textbf{NB}: É de salientar que a função \ensuremath{\Varid{loop}} é quem vai tratar da recursividade mútua das várias funções em causa (\ensuremath{\Varid{f}}, \ensuremath{\Varid{g}}, \ensuremath{\Conid{C}});
+
+Ao chegarmos à etapa final, a função init vai recolher os casos bases pela mesma ordem que as funções argumentos aparecem na função \ensuremath{\Varid{loop}}. Assim e analisando os cálculos acima, temos a definição da função \ensuremath{\Varid{init}}: 
+\begin{eqnarray*}
+\start
+\ensuremath{\Varid{init}\mathrel{=}(\mathrm{1},\mathrm{2},\mathrm{2})}
+\qed
+\end{eqnarray*}
+
+Baseando-nos no exemplo aplicamos também a função \ensuremath{\p1} após o \ensuremath{\for{\Varid{loop}}\ {\Varid{init}}}, obtendo:
+\begin{eqnarray*}
+\start
+\ensuremath{\Varid{cat}\mathrel{=}\p1\comp \for{\Varid{loop}}\ {\Varid{init}}}
+\qed
+\end{eqnarray*}
+Assim, obtemos as definições das funções supramencionadas:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{59}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{f}\;\mathrm{0}\mathrel{=}\mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{f}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{f}\;(\Varid{n})\mathbin{+}\mathrm{4}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{g}\;\mathrm{0}\mathrel{=}\mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{g}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{g}\;(\Varid{n})\mathbin{+}\mathrm{1}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{c}\;\mathrm{0}\mathrel{=}\mathrm{1}{}\<[E]%
+\\
+\>[B]{}\Varid{c}\;(\Varid{n}\mathbin{+}\mathrm{1})\mathrel{=}\Varid{c}\;(\Varid{n})\mathbin{*}(\Varid{f}\;(\Varid{n})\mathbin{/}\Varid{g}\;(\Varid{n})){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{loop}\;(\Varid{c},(\Varid{f},\Varid{g}))\mathrel{=}(\uncurry{\cdot \div \cdot }\;((\Varid{c}\mathbin{*}\Varid{f}),\Varid{g}),(\Varid{f}\mathbin{+}\mathrm{4},\Varid{g}\mathbin{+}{}\<[59]%
+\>[59]{}\mathrm{1})){}\<[E]%
+\\
+\>[B]{}\Varid{inic}\mathrel{=}(\mathrm{1},(\mathrm{2},\mathrm{2})){}\<[E]%
+\\
+\>[B]{}\Varid{prj}\mathrel{=}\p1{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+por forma a que
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{cat}\mathrel{=}\Varid{prj}\comp \for{\Varid{loop}}\ {\Varid{inic}}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+seja a função pretendida.
+\textbf{NB}: usar divisão inteira.
+Apresentar de seguida a justificação da solução encontrada.
+\subsection*{Problema 3}
+\subsection{Solução: }
+Uma vez que a função \ensuremath{\Varid{calcLine}} calcula a interpolação linear entre dois pontos e cada um destes pontos é do tipo \ensuremath{\Conid{NPoint}} que por sua vez é uma lista de \ensuremath{\Q } de tamanho \ensuremath{\Conid{N}}, sendo \ensuremath{\Conid{N}} o número de dimensões de cada ponto, temos que a função \ensuremath{\Varid{calcLine}} é um catamorfismo tal é referido no enunciado, que irá "consumir" as dimensões em causa. Dado que o tipo em causa "consome" listas de \ensuremath{\Q } conseguimos perceber e inferir que o bifunctor de base associado a este tipo indutivo é o mesmo que é usado para o tipo indutivo \ensuremath{\Conid{List}}. Assim temos:
+
+  \ensuremath{\Conid{T}\;\Conid{A}\mathrel{=}\Conid{NPoint}}
+
+  \ensuremath{\Conid{B}\;(\Conid{X},\Conid{Y})\mathrel{=}\Conid{X}\mathbin{+}\Conid{X}\times\Conid{Y}}
+
+  \ensuremath{\Conid{B}\;(\Varid{id},\Varid{f})\mathrel{=}\Varid{id}\mathbin{+}\Varid{id}\times\Varid{f}}
+
+De seguida, iremos definir o diagrama genérico associado ao tipo indutivo \ensuremath{\Conid{NPoint}}:
+
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\Conid{Npoint}}
+           \ar[d]_-{\ensuremath{\cata{\Varid{f}}}}
+&
+    \ensuremath{\mathrm{1}\mathbin{+}\Conid{Q}\mathbin{*}\Conid{Npoint}}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}\Varid{id}\times\cata{\Varid{f}}}}
+           \ar[l]_-{\ensuremath{\mathbf{in}}}
+\\
+     \ensuremath{(\Conid{Npoint}\to \Conid{Overtime}\;\Conid{Npoint})}
+&
+     \ensuremath{\mathrm{1}\mathbin{+}\Conid{Q}\times(\Conid{Npoint}\to \Conid{Overtime}\;\Conid{Npoint})}
+           \ar[l]^-{\ensuremath{\Varid{gene}}}
+}
+\end{eqnarray*}
+
+Com a informação do diagrama acima, conseguimos inferir o diagrama associado ao catamorfismo \ensuremath{\Varid{calcLine}}:
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\Conid{Npoint}}
+           \ar[d]_-{\ensuremath{\Varid{calcLine}}}
+&
+    \ensuremath{\mathrm{1}\mathbin{+}\Conid{Q}\mathbin{*}\Conid{Npoint}}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}\Varid{id}\times\Varid{calcLine}}}
+           \ar[l]_-{\ensuremath{\mathbf{in}}}
+\\
+     \ensuremath{(\Conid{Npoint}\to \Conid{Overtime}\;\Conid{Npoint})}
+&
+     \ensuremath{\mathrm{1}\mathbin{+}\Conid{Q}\times(\Conid{Npoint}\to \Conid{Overtime}\;\Conid{Npoint})}
+           \ar[l]^-{\ensuremath{\Varid{h}}}
+}
+\end{eqnarray*}
+
+Como foi referido anteriormente, uma vez que a função \ensuremath{\Varid{calcLine}} é um catamorfismo, falta-nos induzir o gene \ensuremath{\Varid{h}} associado a este catamorfismo. Conseguimos perceber através da dica dada no anexo \ref{sec:codigo}, que o gene irá fazer uso da função \ensuremath{\Varid{g}} disponibilizada para tratar do que vem da recursividade. Assim, conseguimos chegar à definição da função \ensuremath{\Varid{calcLine}} através do seu gene.
+Com isto tem-se: 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{8}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{15}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{calcLine}\mathbin{::}\Conid{NPoint}\to (\Conid{NPoint}\to \Conid{OverTime}\;\Conid{NPoint}){}\<[E]%
+\\
+\>[B]{}\Varid{calcLine}\mathrel{=}\Varid{cataList}\;\Varid{h}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{h}\mathrel{=}{}\<[9]%
+\>[9]{}\alt{\underline{\underline{\Varid{nil}}}}{\Varid{g}}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{g}\mathbin{::}(\Q ,\Conid{NPoint}\to \Conid{OverTime}\;\Conid{NPoint})\to (\Conid{NPoint}\to \Conid{OverTime}\;\Conid{NPoint}){}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{g}\;(\Varid{d},\Varid{f})\;\Varid{l}\mathrel{=}\mathbf{case}\;\Varid{l}\;\mathbf{of}{}\<[E]%
+\\
+\>[4]{}\hsindent{4}{}\<[8]%
+\>[8]{}[\mskip1.5mu \mskip1.5mu]{}\<[15]%
+\>[15]{}\to \Varid{nil}{}\<[E]%
+\\
+\>[4]{}\hsindent{4}{}\<[8]%
+\>[8]{}(\Varid{x}\mathbin{:}\Varid{xs})\to \lambda \Varid{z}\to \Varid{concat}\mathbin{\$}(\Varid{sequenceA}\;[\mskip1.5mu \Varid{singl}\comp \Varid{linear1d}\;\Varid{d}\;\Varid{x},\Varid{f}\;\Varid{xs}\mskip1.5mu])\;\Varid{z}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\subsection{Solução: }
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{deCasteljau}\mathbin{::}[\mskip1.5mu \Conid{NPoint}\mskip1.5mu]\to \Conid{OverTime}\;\Conid{NPoint}{}\<[E]%
+\\
+\>[B]{}\Varid{deCasteljau}\mathrel{=}\Varid{hyloAlgForm}\;\Varid{alg}\;\Varid{coalg}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{coalg}\mathrel{=}\bot {}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{alg}\mathrel{=}\bot {}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{hyloAlgForm}\mathrel{=}\bot {}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection*{Problema 4}
+
+\subsection{ Solução para listas não vazias:}
+
+Uma vez que estamos a trabalhar com listas não vazias teremos que definir um tipo indutivo para tal.Ora este irá ser muito semelhante ao já conhecido tipo indutivo List.
+Assim temos: 
+
+  \ensuremath{\Conid{T}\;\Conid{A}\mathrel{=}\Conid{NotEmptyList}\;\Conid{A}}
+
+  \ensuremath{\Conid{B}\;(\Conid{X},\Conid{Y})\mathrel{=}\Conid{X}\mathbin{+}\Conid{X}\times\Conid{Y}}
+
+  \ensuremath{\Conid{B}\;(\Varid{id},\Varid{f})\mathrel{=}\Varid{id}\mathbin{+}\Varid{id}\times\Varid{f}}
+
+Diagrama genérico de um catamorfismo sobre o tipo indutivo \ensuremath{\Conid{NotEmptyList}}:
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\Conid{NotEmptyList}\;\Conid{A}}
+           \ar[d]_-{\ensuremath{\cata{\Varid{f}}}}
+&
+    \ensuremath{\Conid{A}\mathbin{+}\Conid{A}\mathbin{*}\Conid{NotEmptyList}\;\Conid{A}}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}\Varid{id}\times\cata{\Varid{f}}}}
+           \ar[l]_-{\ensuremath{\mathsf{in}}}
+\\
+     \ensuremath{\Conid{B}}
+&
+     \ensuremath{\Conid{A}\mathbin{+}\Conid{A}\times\Conid{B}}
+           \ar[l]^-{\ensuremath{\Varid{f}}}
+}
+\end{eqnarray*}
+Além disso, teremos de definir a função out assim como a função que caracteriza o comportamento recursivo de um catamorfismo sobre o tipo indutivo supramencionado. Deste modo temos:
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{18}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{22}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{24}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{outNotEmptyList}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[24]%
+\>[24]{}\mathrel{=}i_1\;(\Varid{a}){}\<[E]%
+\\
+\>[B]{}\Varid{outNotEmptyList}\;(\Varid{a}\mathbin{:}\Varid{x})\mathrel{=}i_2\;(\Varid{a},\Varid{x}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{recNotEmptyList}\;{}\<[18]%
+\>[18]{}\Varid{f}{}\<[22]%
+\>[22]{}\mathrel{=}\Varid{id}+\Varid{id}\times\Varid{f}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\cata{\Varid{g}}\mathrel{=}\Varid{g}\comp \Varid{recNotEmptyList}\;\cata{\Varid{g}}\comp \Varid{outNotEmptyList}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+ Uma vez que temos na alínea 1 do enunciado do Problema: \ensuremath{\Varid{avg\char95 aux}\mathrel{=}\cata{\alt{\Varid{b}}{\Varid{q}}}} tal que 
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\conj{\Varid{avg}}{\length }}
+para listas não vazias, teremos primeiro de definir o gene da função length e da função avg para o tipo indutivo em causa. Assim temos, para a função length: 
+
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\Conid{NotEmptyList}\;\Conid{A}}
+           \ar[d]_-{length}
+&
+    \ensuremath{\Conid{A}\mathbin{+}\Conid{A}\times\Conid{NotEmptyList}\;\Conid{A}}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}\Varid{id}\times(\length )}}
+           \ar[l]_-{\ensuremath{\mathsf{in}}}
+\\
+     \ensuremath{\Conid{A}}
+&
+     \ensuremath{\Conid{A}\mathbin{+}\Conid{A}\times\Conid{A}}
+           \ar[l]^-{\ensuremath{\alt{\Varid{one}}{\succ \comp \p2}}}
+}
+\end{eqnarray*}
+
+E para a a função avg, temos:
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\Conid{NotEmptyList}\;\Conid{A}}
+           \ar[d]_-{avg}
+&
+    \ensuremath{\Conid{A}\mathbin{+}\Conid{A}\times\Conid{NotEmptyList}\;\Conid{A}}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}\Varid{id}\times(\Varid{avg})}}
+           \ar[l]_-{\ensuremath{\mathsf{in}}}
+\\
+     \ensuremath{\Conid{A}}
+&
+     \ensuremath{\Conid{A}\mathbin{+}\Conid{A}\times\Conid{A}}
+           \ar[l]^-{\ensuremath{\alt{\Varid{g1}}{\Varid{g2}}}}
+}
+\end{eqnarray*}
+
+Onde:
+
+\ensuremath{\Varid{g1}\mathrel{=}\Varid{id}}
+
+\ensuremath{\Varid{g2}\mathrel{=}\uncurry{\cdot \div \cdot }\;(\uncurry{\Varid{add}}\;(\p1,\uncurry{\Varid{mul}}\;(\p2,\Varid{k})),\succ \;\Varid{k})}
+
+\ensuremath{\Varid{k}\mathrel{=}\length \;\Varid{x}}
+
+Em que \ensuremath{\Varid{x}} é a cauda da lista.
+
+\textbf{NB}: Para efeito de simplificação, usaremos o gene do catamorfismo avg como  \ensuremath{\alt{\Varid{g1}}{\Varid{g2}}}.
+
+Uma vez que queremos usar a lei de recursividade mútua, temos como ponto de partida a seguinte expressão:
+
+  \ensuremath{\Varid{avg\char95 aux}\mathrel{=}\conj{\Varid{avg}}{\length }}
+
+Onde o diagrama da função \ensuremath{\Varid{avg\char95 aux}} é o seguinte:
+
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\Conid{NotEmptyList}\;\Conid{A}}
+           \ar[d]_-{\ensuremath{\Varid{avg\char95 aux}}}
+&
+    \ensuremath{\Conid{A}\mathbin{+}\Conid{A}\times\Conid{NotEmptyList}\;\Conid{A}}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}(\Varid{id}\times}avg_aux\ensuremath{)}}
+           \ar[l]_-{\ensuremath{\mathsf{in}}}
+\\
+     \ensuremath{\Conid{A}\times\Conid{A}}
+&
+     \ensuremath{\Conid{A}\mathbin{+}(\Conid{A}\times(\Conid{A}\times\Conid{A}))}
+           \ar[l]^-{\ensuremath{\alt{\Varid{b}}{\Varid{q}}}}
+}
+\end{eqnarray*}
+
+Assim, teremos de aplicar as leis do Cálculo de Programas:
+\begin{eqnarray*}
+\start
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\conj{\Varid{avg}}{\length }}
+%
+\just\equiv{ Definição de avg como catamorfismo, definição de length como catamorfismo }
+%
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\conj{\alt{\Varid{g1}}{\Varid{g2}}}{\alt{\Varid{one}}{\succ \comp \p2}}}
+%
+\just\equiv{ Lei Banana-Split (53) }
+%
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\cata{(\alt{\Varid{g1}}{\Varid{g2}}\times\alt{\Varid{one}}{\succ \comp \p2})\comp \conj{\Conid{F}\;\p1}{\Conid{F}\;\p2}}}
+%
+\just\equiv{ Definição de Functor para \ensuremath{\Conid{NotEmptyList}} }
+%
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\cata{\alt{\Varid{g1}}{\Varid{g2}}\times\alt{\Varid{one}}{\succ \comp \p2}\comp \conj{\Varid{id}\mathbin{+}(\Varid{id}\times\p1)}{\Varid{id}\mathbin{+}(\Varid{id}\times\p2)}}}
+%
+\just\equiv{ Lei Absorção x (11) }
+%
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\cata{\conj{\alt{\Varid{g1}}{\Varid{g2}}\comp (\Varid{id}\mathbin{+}\Varid{id}\times\p1)}{\alt{\Varid{one}}{\succ \comp \p2}\comp (\Varid{id}\mathbin{+}\Varid{id}\times\p2)}}}
+%
+\just\equiv{ Lei Absorção + (22), Natural id (1), natural \ensuremath{\p2} (13) }
+%
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\cata{\conj{\alt{\Varid{g1}}{\Varid{g2}\comp (\Varid{id}\times\p1)}}{\alt{\Varid{one}}{\succ \comp \p2\comp \p2}}}}
+%
+\just\equiv{ Lei da Troca (28) }
+%
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\cata{\alt{\conj{\Varid{g1}}{\Varid{one}}}{\conj{\Varid{g2}\comp (\Varid{id}\times\p1)}{\succ \comp \p2\comp \p2}}}}
+%
+\qed
+\end{eqnarray*}
+
+\begin{hscode}\SaveRestoreHook
+\ColumnHook
+\end{hscode}\resethooks
+Desta forma chegámos ao pretendido:
+\ensuremath{\Varid{avg\char95 aux}\mathrel{=}\cata{\alt{\Varid{b}}{\Varid{q}}}}
+
+Com
+
+\ensuremath{\Varid{b}\mathrel{=}\conj{\Varid{g1}}{\Varid{one}}}
+
+\ensuremath{\Varid{q}\mathrel{=}\conj{\Varid{g2}\comp (\Varid{id}\times\p1)}{\succ \comp \p2\comp \p2}}
+
+E substituindo pelas definições de g1 e g2, temos:
+
+\ensuremath{\Varid{b}\mathrel{=}\conj{\Varid{id}}{\Varid{one}}}
+
+\ensuremath{\Varid{q}\mathrel{=}\conj{\Varid{av}}{\Varid{len}}}
+
+Onde:
+
+\ensuremath{\Varid{av}\mathrel{=}\uncurry{\cdot \div \cdot }\;(\uncurry{\Varid{add}}\;(\p1,\uncurry{\Varid{mul}}\;(\p2,\Varid{k})),\succ \;\Varid{k})\comp (\Varid{id}\times\p1)}
+
+\ensuremath{\Varid{len}\mathrel{=}\succ \comp \p2\comp \p2}
+
+Com isto, temos então definida a função \ensuremath{\Varid{avg\char95 aux}} sobre a forma de um catamorfismo.
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{avg\char95 aux}\mathrel{=}\cata{\Varid{gene}}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{gene}\mathrel{=}\alt{\Varid{b}}{\Varid{q}}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{b}\mathrel{=}\conj{\Varid{id}}{\underline{\mathrm{1}}}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{q}\mathrel{=}\conj{\Varid{av}}{\Varid{len}}{}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{av}\;(\Varid{valor},(\Varid{med},\Varid{comp}))\mathrel{=}((\Varid{med}\mathbin{*}\Varid{comp})\mathbin{+}\Varid{valor})\mathbin{/}(\Varid{comp}\mathbin{+}\mathrm{1}){}\<[E]%
+\\
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{len}\;(\Varid{valor},(\Varid{med},\Varid{comp}))\mathrel{=}\Varid{comp}\mathbin{+}\mathrm{1}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{avg}\mathrel{=}\p1\comp \Varid{avg\char95 aux}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection{ Solução para árvores de tipo \LTree: }
+
+Ora, após o raciocínio para o tipo indutivo \ensuremath{\Conid{NotEmptyList}}, o raciocínio para o tipo indutivo \LTree\ é o mesmo.
+
+\textbf{NB}: A diferença é que para este tipo indutivo temos que a média só é calculada nas folhas e temos de ir somando o comprimento das sub-árvores (ramo da esquerda e ramo da direita).
+
+Assim temos que a função \ensuremath{\Varid{avgLTree}} é um split de catamorfismos. Logo, temos o seguinte diagrama:
+
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+    \ensuremath{\mathsf{LTree}\;\Conid{A}}
+           \ar[d]_-{\ensuremath{\Varid{avgLTree}}}
+&
+    \ensuremath{\Conid{A}\mathbin{+}\mathsf{LTree}\;\Conid{A}\times\mathsf{LTree}\;\Conid{A}}
+           \ar[d]^{\ensuremath{\Varid{id}\mathbin{+}(}avgLTree\ensuremath{\times}avgLTree\ensuremath{)}}
+           \ar[l]_-{\ensuremath{\mathbf{in}}}
+\\
+     \ensuremath{(\Conid{A}\times\Conid{A})}
+&
+     \ensuremath{\Conid{A}\mathbin{+}((\Conid{A}\times\Conid{A})\times(\Conid{A}\times\Conid{A}))}
+           \ar[l]^-{\ensuremath{\alt{\Varid{b}}{\Varid{q}}}}
+}
+\end{eqnarray*}
+
+Seguindo o mesmo raciocínio, mas aplicado ao tipo indutivo \LTree\ temos agora dois pares obtidos através da recursividade mútua das funções length e avg para este tipo indutivo. Assim cada par é constituido pela média das folhas e comprimento das sub-árvores.
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{avgLTree}\mathrel{=}\p1\comp \llparenthesis\, \Varid{gene}\,\rrparenthesis\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{gene}\mathrel{=}\alt{\Varid{b}}{\Varid{q}}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{b}\mathrel{=}\conj{\Varid{id}}{\underline{\mathrm{1}}}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{q}\mathrel{=}\conj{\Varid{av}}{\Varid{len}}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{av}\;((\Varid{med\char95 l},\Varid{comp\char95 l}),(\Varid{med\char95 r},\Varid{comp\char95 r}))\mathrel{=}(\Varid{med\char95 l}\mathbin{*}\Varid{comp\char95 l}\mathbin{+}\Varid{med\char95 r}\mathbin{*}\Varid{comp\char95 r})\mathbin{/}(\Varid{comp\char95 l}\mathbin{+}\Varid{comp\char95 r}){}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{len}\;((\Varid{med\char95 l},\Varid{comp\char95 l}),(\Varid{med\char95 r},\Varid{comp\char95 r}))\mathrel{=}\Varid{comp\char95 l}\mathbin{+}\Varid{comp\char95 r}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection*{Problema 5}
+Inserir em baixo o código \Fsharp\ desenvolvido, entre \text{\ttfamily \char92{}begin\char123{}verbatim\char125{}} e \text{\ttfamily \char92{}end\char123{}verbatim\char125{}}:
+
+\begin{tabbing}\ttfamily
+~\char47{}\char47{}~\char123{}\char45{}\char35{}~OPTIONS\char95{}GHC~\char45{}XNPlusKPatterns~\char35{}\char45{}\char125{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}c\char41{}~MP\char45{}I~\char40{}1998\char47{}9\char45{}2006\char47{}7\char41{}~and~CP~\char40{}2005\char47{}6\char45{}2016\char47{}7\char41{}\\
+\ttfamily ~\\
+\ttfamily ~module~BTree~\\
+\ttfamily ~\\
+\ttfamily ~open~Cp\\
+\ttfamily ~\char47{}\char47{}import~Data\char46{}List\\
+\ttfamily ~\char47{}\char47{}import~Data\char46{}Monoid\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}1\char41{}~Datatype~definition~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~type~BTree\char60{}\char39{}a\char62{}~\char61{}~Empty~\char124{}~Node~of~\char39{}a~\char42{}~\char40{}BTree\char60{}\char39{}a\char62{}~\char42{}~BTree\char60{}\char39{}a\char62{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~let~inBTree~x~\char61{}~\char40{}either~\char40{}konst~Empty\char41{}~Node\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~let~outBTree~x~\char61{}~\\
+\ttfamily ~~~~~~~match~x~with\\
+\ttfamily ~~~~~~~\char124{}~Empty~\char45{}\char62{}~Left~\char40{}\char41{}\\
+\ttfamily ~~~~~~~\char124{}~Node~\char40{}a\char44{}\char40{}t1\char44{}t2\char41{}\char41{}~\char45{}\char62{}~Right~\char40{}a\char44{}\char40{}t1\char44{}t2\char41{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}2\char41{}~Ana~\char43{}~cata~\char43{}~hylo~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~recBTree~g~\char61{}~id~\char45{}\char124{}\char45{}~\char40{}id~\char62{}\char60{}~\char40{}g~\char62{}\char60{}~g\char41{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~let~baseBTree~f~g~\char61{}~id~\char45{}\char124{}\char45{}~\char40{}f~\char62{}\char60{}~\char40{}g~\char62{}\char60{}~g\char41{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~let~recBTree~g~\char61{}~baseBTree~id~g\\
+\ttfamily ~\\
+\ttfamily ~let~rec~cataBTree~g~x~\char61{}~\char40{}g~\char60{}\char60{}~\char40{}recBTree~\char40{}cataBTree~g\char41{}\char41{}~\char60{}\char60{}~outBTree\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~let~rec~anaBTree~g~x~\char61{}~\char40{}inBTree~\char60{}\char60{}~\char40{}recBTree~\char40{}anaBTree~g\char41{}\char41{}~\char60{}\char60{}~g\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~let~hyloBTree~h~g~x~\char61{}~\char40{}cataBTree~h~\char60{}\char60{}~anaBTree~g\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}3\char41{}~Map~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~instance~Functor~BTree\\
+\ttfamily ~\char47{}\char47{}~~~~~~~where~fmap~f~\char61{}~cataBTree~\char40{}~inBTree~\char46{}~baseBTree~f~id~\char41{}\\
+\ttfamily ~let~fmap~f~x~\char61{}~cataBTree~\char40{}~inBTree~\char60{}\char60{}~baseBTree~f~id~\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~equivalent~to\char58{}\\
+\ttfamily ~\char47{}\char47{}~~~~~~~where~fmap~f~\char61{}~anaBTree~\char40{}~baseBTree~f~id~\char46{}~outBTree~\char41{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}4\char41{}~Examples~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}4\char46{}1\char41{}~Inversion~\char40{}mirror\char41{}~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~let~invBTree~x~\char61{}~cataBTree~\char40{}inBTree~\char60{}\char60{}~\char40{}id~\char45{}\char124{}\char45{}~\char40{}id~\char62{}\char60{}~swap\char41{}\char41{}\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}4\char46{}2\char41{}~Counting~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~let~countBTree~x~\char61{}~cataBTree~\char40{}either~\char40{}konst~0\char41{}~\char40{}succ~\char60{}\char60{}~\char40{}uncurry~\char40{}\char43{}\char41{}\char41{}~\char60{}\char60{}~p2\char41{}\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}4\char46{}3\char41{}~Serialization~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~let~preord~x~\char61{}~\\
+\ttfamily ~~~~~let~f\char40{}x\char44{}\char40{}l\char44{}r\char41{}\char41{}\char61{}x\char58{}\char58{}l\char64{}r\\
+\ttfamily ~~~~~in~\char40{}either~nil~f\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~let~preordt~x~\char61{}~cataBTree~preord~x~~\char47{}\char47{}~pre\char45{}order~traversal\\
+\ttfamily ~\\
+\ttfamily ~let~postordt~x~\char61{}~\\
+\ttfamily ~~~~~let~f\char40{}x\char44{}\char40{}l\char44{}r\char41{}\char41{}\char61{}l\char64{}r\char64{}\char91{}x\char93{}\\
+\ttfamily ~~~~~in~cataBTree~\char40{}either~nil~f\char41{}~x~~~\char47{}\char47{}~post\char45{}order~traversal\\
+\ttfamily ~\\
+\ttfamily ~let~inord~x~\char61{}~\\
+\ttfamily ~~~~~let~join\char40{}x\char44{}\char40{}l\char44{}r\char41{}\char41{}\char61{}l\char64{}\char91{}x\char93{}\char64{}r\\
+\ttfamily ~~~~~~in~\char40{}either~nil~join\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~let~inordt~x~\char61{}~cataBTree~inord~x~~~\char47{}\char47{}~in\char45{}order~traversal\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}4\char46{}4\char41{}~Quicksort~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~let~rec~part~r~c~\char61{}~\\
+\ttfamily ~~~match~c~with\\
+\ttfamily ~~~\char124{}~\char91{}\char93{}~\char45{}\char62{}~\char40{}\char91{}\char93{}\char44{}\char91{}\char93{}\char41{}\\
+\ttfamily ~~~\char124{}~\char40{}x\char58{}\char58{}xs\char41{}~\char45{}\char62{}~let~\char40{}s\char44{}c\char41{}~\char61{}~part~r~xs~\\
+\ttfamily ~~~~~~~~~~~~~~~~~in~if~x~\char60{}~r~then~\char40{}x\char58{}\char58{}s\char44{}c\char41{}~else~\char40{}s\char44{}x\char58{}\char58{}c\char41{}\\
+\ttfamily ~\\
+\ttfamily ~let~qsep~l~\char61{}~\\
+\ttfamily ~~~match~l~with\\
+\ttfamily ~~~\char124{}~\char91{}\char93{}~\char45{}\char62{}~Left~\char40{}\char41{}\\
+\ttfamily ~~~\char124{}~\char40{}x\char58{}\char58{}xs\char41{}~\char45{}\char62{}~let~\char40{}s\char44{}l\char41{}~\char61{}~part~x~xs~in~Right~\char40{}x\char44{}\char40{}s\char44{}l\char41{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~let~qSort~x~\char61{}~hyloBTree~inord~qsep~x~\char47{}\char47{}~the~same~as~\char40{}cataBTree~inord\char41{}\char46{}~\char40{}anaBTree~qsep\char41{}\\
+\ttfamily ~\\
+\ttfamily ~\char40{}\char42{}~pointwise~versions\char58{}\\
+\ttfamily ~qSort~\char91{}\char93{}~\char61{}~\char91{}\char93{}\\
+\ttfamily ~qSort~\char40{}h\char58{}t\char41{}~\char61{}~let~\char40{}t1\char44{}t2\char41{}~\char61{}~part~\char40{}\char60{}h\char41{}~t\\
+\ttfamily ~~~~~~~~~~~~~~~in~~qSort~t1~\char43{}\char43{}~\char91{}h\char93{}~\char43{}\char43{}~qSort~t2\\
+\ttfamily ~\\
+\ttfamily ~or\char44{}~using~list~comprehensions\char58{}\\
+\ttfamily ~\\
+\ttfamily ~qSort~\char91{}\char93{}~\char61{}~\char91{}\char93{}\\
+\ttfamily ~qSort~\char40{}h\char58{}t\char41{}~\char61{}~qSort~\char91{}~a~\char124{}~a~\char60{}\char45{}~t~\char44{}~a~\char60{}~h~\char93{}~\char43{}\char43{}~\char91{}h\char93{}~\char43{}\char43{}~\\
+\ttfamily ~~~~~~~~~~~~~~~qSort~\char91{}~a~\char124{}~a~\char60{}\char45{}~t~\char44{}~a~\char62{}\char61{}~h~\char93{}\\
+\ttfamily ~\\
+\ttfamily ~\char42{}\char41{}\\
+\ttfamily ~\char47{}\char47{}~\char40{}4\char46{}5\char41{}~Traces~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~let~auxAdd~c~t~\char61{}~c~\char58{}\char58{}~t\\
+\ttfamily ~\\
+\ttfamily ~let~rec~union~c1~c2~\char61{}~\\
+\ttfamily ~~~~~~match~c2~with\\
+\ttfamily ~~~~~~\char124{}~\char91{}\char93{}~\char45{}\char62{}~c1\\
+\ttfamily ~~~~~~\char124{}~\char40{}h\char58{}\char58{}t\char41{}~\char45{}\char62{}~if~\char40{}List\char46{}exists~\char40{}fun~c~\char45{}\char62{}~c~\char61{}~h\char41{}~c1\char41{}~then~union~c1~t\\
+\ttfamily ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~else~union~\char40{}c1\char64{}\char91{}h\char93{}\char41{}~t~\\
+\ttfamily ~\\
+\ttfamily ~let~tunion\char40{}a\char44{}\char40{}l\char44{}r\char41{}\char41{}~\char61{}~union~\char40{}List\char46{}map~\char40{}auxAdd~a\char41{}~l\char41{}~\char40{}List\char46{}map~\char40{}auxAdd~a\char41{}~r\char41{}\\
+\ttfamily ~\\
+\ttfamily ~let~traces~x~\char61{}~cataBTree~\char40{}either~\char40{}konst~\char91{}\char91{}\char93{}\char93{}\char41{}~tunion\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}4\char46{}6\char41{}~Towers~of~Hanoi~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~pointwise\char58{}\\
+\ttfamily ~\char47{}\char47{}~hanoi\char40{}d\char44{}0\char41{}~\char61{}~\char91{}\char93{}\\
+\ttfamily ~\char47{}\char47{}~hanoi\char40{}d\char44{}n\char43{}1\char41{}~\char61{}~\char40{}hanoi~\char40{}not~d\char44{}n\char41{}\char41{}~\char43{}\char43{}~\char91{}\char40{}n\char44{}d\char41{}\char93{}~\char43{}\char43{}~\char40{}hanoi~\char40{}not~d\char44{}~n\char41{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~\\
+\ttfamily ~let~present~x~\char61{}~inord~x~~\char47{}\char47{}~same~as~in~qSort\\
+\ttfamily ~\\
+\ttfamily ~let~strategy~x~\char61{}~\\
+\ttfamily ~~~match~x~with\\
+\ttfamily ~~~\char124{}\char40{}d\char44{}0\char41{}~\char45{}\char62{}~Left~\char40{}\char41{}\\
+\ttfamily ~~~\char124{}\char40{}d\char44{}n\char41{}~\char45{}\char62{}~Right~\char40{}\char40{}n\char45{}1\char44{}d\char41{}\char44{}\char40{}\char40{}not~d\char44{}n\char45{}1\char41{}\char44{}\char40{}not~d\char44{}n\char45{}1\char41{}\char41{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~let~hanoi~x~\char61{}~hyloBTree~present~strategy~x\\
+\ttfamily ~\\
+\ttfamily ~\char40{}\char42{}\\
+\ttfamily ~~~~~The~Towers~of~Hanoi~problem~comes~from~a~puzzle~marketed~in~1883\\
+\ttfamily ~~~~~by~the~French~mathematician~Édouard~Lucas\char44{}~under~the~pseudonym\\
+\ttfamily ~~~~~Claus\char46{}~The~puzzle~is~based~on~a~legend~according~to~which\\
+\ttfamily ~~~~~there~is~a~temple\char44{}~apparently~in~Bramah~rather~than~in~Hanoi~as\\
+\ttfamily ~~~~~one~might~expect\char44{}~where~there~are~three~giant~poles~fixed~in~the\\
+\ttfamily ~~~~~ground\char46{}~On~the~first~of~these~poles\char44{}~at~the~time~of~the~world\char39{}s\\
+\ttfamily ~~~~~creation\char44{}~God~placed~sixty~four~golden~disks\char44{}~each~of~different\\
+\ttfamily ~~~~~size\char44{}~in~decreasing~order~of~size\char46{}~The~Bramin~monks~were~given\\
+\ttfamily ~~~~~the~task~of~moving~the~disks\char44{}~one~per~day\char44{}~from~one~pole~to~another\\
+\ttfamily ~~~~~subject~to~the~rule~that~no~disk~may~ever~be~above~a~smaller~disk\char46{}\\
+\ttfamily ~~~~~The~monks\char39{}~task~would~be~complete~when~they~had~succeeded~in~moving\\
+\ttfamily ~~~~~all~the~disks~from~the~first~of~the~poles~to~the~second~and\char44{}~on\\
+\ttfamily ~~~~~the~day~that~they~completed~their~task~the~world~would~come~to\\
+\ttfamily ~~~~~an~end\char33{}\\
+\ttfamily ~~~~~\\
+\ttfamily ~~~~~There~is~a~well\char173{}known~inductive~solution~to~the~problem~given\\
+\ttfamily ~~~~~by~the~pseudocode~below\char46{}~In~this~solution~we~make~use~of~the~fact\\
+\ttfamily ~~~~~that~the~given~problem~is~symmetrical~with~respect~to~all~three\\
+\ttfamily ~~~~~poles\char46{}~Thus~it~is~undesirable~to~name~the~individual~poles\char46{}~Instead\\
+\ttfamily ~~~~~we~visualize~the~poles~as~being~arranged~in~a~circle\char59{}~the~problem\\
+\ttfamily ~~~~~is~to~move~the~tower~of~disks~from~one~pole~to~the~next~pole~in\\
+\ttfamily ~~~~~a~specified~direction~around~the~circle\char46{}~The~code~defines~H~n~d\\
+\ttfamily ~~~~~to~be~a~sequence~of~pairs~\char40{}k\char44{}d\char39{}\char41{}~where~n~is~the~number~of~disks\char44{}\\
+\ttfamily ~~~~~k~is~a~disk~number~and~d~and~d\char39{}~are~directions\char46{}~Disks~are~numbered\\
+\ttfamily ~~~~~from~0~onwards\char44{}~disk~0~being~the~smallest\char46{}~\char40{}Assigning~number~0\\
+\ttfamily ~~~~~to~the~smallest~rather~than~the~largest~disk~has~the~advantage\\
+\ttfamily ~~~~~that~the~number~of~the~disk~that~is~moved~on~any~day~is~independent\\
+\ttfamily ~~~~~of~the~total~number~of~disks~to~be~moved\char46{}\char41{}~Directions~are~boolean\\
+\ttfamily ~~~~~values\char44{}~true~representing~a~clockwise~movement~and~false~an~anti\char173{}clockwise\\
+\ttfamily ~~~~~movement\char46{}~The~pair~\char40{}k\char44{}d\char39{}\char41{}~means~move~the~disk~numbered~k~from\\
+\ttfamily ~~~~~its~current~position~in~the~direction~d\char39{}\char46{}~The~semicolon~operator\\
+\ttfamily ~~~~~concatenates~sequences~together\char44{}~\char91{}\char93{}~denotes~an~empty~sequence\\
+\ttfamily ~~~~~and~\char91{}x\char93{}~is~a~sequence~with~exactly~one~element~x\char46{}~Taking~the~pairs\\
+\ttfamily ~~~~~in~order~from~left~to~right\char44{}~the~complete~sequence~H~n~d~prescribes\\
+\ttfamily ~~~~~how~to~move~the~n~smallest~disks~one\char173{}by\char173{}one~from~one~pole~to~the\\
+\ttfamily ~~~~~next~pole~in~the~direction~d~following~the~rule~of~never~placing\\
+\ttfamily ~~~~~a~larger~disk~on~top~of~a~smaller~disk\char46{}\\
+\ttfamily ~~~~~\\
+\ttfamily ~~~~~H~0~~~~~d~\char61{}~\char91{}\char93{}\char44{}\\
+\ttfamily ~~~~~H~\char40{}n\char43{}1\char41{}~d~\char61{}~H~n~\char172{}d~\char59{}~\char91{}~\char40{}n\char44{}~d\char41{}~\char93{}~\char59{}~H~n~\char172{}d\char46{}\\
+\ttfamily ~~~~~\\
+\ttfamily ~~~~~\char40{}excerpt~from~R\char46{}~Backhouse\char44{}~M\char46{}~Fokkinga~\char47{}~Information~Processing\\
+\ttfamily ~~~~~Letters~77~\char40{}2001\char41{}~71\char45{}\char45{}76\char41{}\\
+\ttfamily ~~~~~\\
+\ttfamily ~\char42{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}5\char41{}~Depth~and~balancing~\char40{}using~mutual~recursion\char41{}~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~\\
+\ttfamily ~let~baldepth~x~\char61{}~\\
+\ttfamily ~~~let~h\char40{}a\char44{}\char40{}\char40{}b1\char44{}b2\char41{}\char44{}\char40{}d1\char44{}d2\char41{}\char41{}\char41{}~\char61{}~\char40{}b1~\char38{}\char38{}~b2~\char38{}\char38{}~abs\char40{}d1\char45{}d2\char41{}\char60{}\char61{}1\char44{}1\char43{}max~d1~d2\char41{}\\
+\ttfamily ~~~let~f\char40{}\char40{}b1\char44{}d1\char41{}\char44{}\char40{}b2\char44{}d2\char41{}\char41{}~\char61{}~\char40{}\char40{}b1\char44{}b2\char41{}\char44{}\char40{}d1\char44{}d2\char41{}\char41{}\\
+\ttfamily ~~~let~g~x~\char61{}~\char40{}either~\char40{}konst\char40{}true\char44{}1\char41{}\char41{}~\char40{}h\char60{}\char60{}\char40{}id\char62{}\char60{}f\char41{}\char41{}\char41{}~x\\
+\ttfamily ~~~in~cataBTree~g~x\\
+\ttfamily ~\\
+\ttfamily ~let~balBTree~x~\char61{}~\char40{}p1~\char60{}\char60{}~baldepth\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~let~depthBTree~x~\char61{}~\char40{}p2~\char60{}\char60{}~baldepth\char41{}~x\\
+\ttfamily ~\\
+\ttfamily ~\char40{}\char42{}\\
+\ttfamily ~\char47{}\char47{}~\char40{}6\char41{}~Going~polytipic~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~natural~transformation~from~base~functor~to~monoid\\
+\ttfamily ~\\
+\ttfamily ~let~tnat~f~\char61{}~let~theta~\char61{}~uncurry~mappend~\\
+\ttfamily ~~~in~either~\char40{}const~mempty\char41{}~\char40{}theta~\char46{}~\char40{}f~\char62{}\char60{}~theta\char41{}\char41{}\\
+\ttfamily ~~~\\
+\ttfamily ~\char47{}\char47{}~monoid~reduction~\\
+\ttfamily ~\\
+\ttfamily ~let~monBTree~f~\char61{}~cataBTree~\char40{}tnat~f\char41{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~alternative~to~\char40{}4\char46{}2\char41{}~serialization~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~let~preordt\char39{}~\char61{}~monBTree~singl\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~alternative~to~\char40{}4\char46{}1\char41{}~counting~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~let~countBTree\char39{}~\char61{}~monBTree~\char40{}const~\char40{}Sum~1\char41{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~\char47{}\char47{}~\char40{}7\char41{}~Zipper~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\\
+\ttfamily ~type~Deriv~\char60{}\char39{}a\char62{}~\char61{}~Dr~Bool~of~\char39{}a~\char42{}~BTree~\char60{}\char39{}a\char62{}\\
+\ttfamily ~\\
+\ttfamily ~type~Zipper~\char60{}\char39{}a\char62{}~\char61{}~\char91{}~Deriv~\char60{}\char39{}a\char62{}~\char93{}\\
+\ttfamily ~\\
+\ttfamily ~let~rec~plug~l~\char61{}\\
+\ttfamily ~~~match~l~with\\
+\ttfamily ~~~\char124{}~\char91{}\char93{}~t~\char45{}\char62{}~t\\
+\ttfamily ~~~\char124{}~\char40{}\char40{}Dr~False~a~l\char41{}\char58{}z\char41{}~t~\char45{}\char62{}~Node~\char40{}a\char44{}\char40{}plug~z~t\char44{}l\char41{}\char41{}\\
+\ttfamily ~~~\char124{}~\char40{}\char40{}Dr~True~~a~r\char41{}\char58{}z\char41{}~t~\char45{}\char62{}~Node~\char40{}a\char44{}\char40{}r\char44{}plug~z~t\char41{}\char41{}\\
+\ttfamily ~\\
+\ttfamily ~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}~end~of~library~\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\char45{}\\
+\ttfamily ~\char42{}\char41{}
+\end{tabbing}
+
+%----------------- Fim do anexo com soluções dos alunos ------------------------%
+
+%----------------- Índice remissivo (exige makeindex) -------------------------%
+
+\printindex
+
+%----------------- Bibliografia (exige bibtex) --------------------------------%
+
+\bibliographystyle{plain}
+\bibliography{cp2021t}
+
+%----------------- Fim do documento -------------------------------------------%
+\end{document}
